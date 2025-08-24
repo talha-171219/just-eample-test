@@ -1,200 +1,548 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="bn">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>আমার দৈনন্দিন কাজের তালিকা</title>
+
+  <!-- Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;600;700&display=swap" rel="stylesheet">
+
   <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background-color: #121212;
-      color: #fff;
-      margin: 0;
-      padding: 0;
-      text-align: center;
+    /* ===== Theme (Spotify-like dark) ===== */
+    :root{
+      --bg:#0f1115;
+      --bg-accent:#0b0f14;
+      --card:#151823;
+      --card-2:#1a1f2b;
+      --text:#e8ecf3;
+      --muted:#9aa6b2;
+      --border:rgba(255,255,255,.07);
+      --ring:#3b82f6;
+      --ring-soft: rgba(59,130,246,.35);
+      --green:#22c55e;
+      --green-2:#16a34a;
+      --red:#ef4444;
+      --blue:#2563eb;
+      --purple:#7c3aed;
+      --yellow:#f59e0b;
     }
-    header {
-      background: #1db954;
-      padding: 20px;
-      font-size: 24px;
-      font-weight: bold;
-      border-bottom: 2px solid #0f0f0f;
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:"Noto Sans Bengali",system-ui,Segoe UI,Roboto,Arial,sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(1000px 600px at -10% -10%, #1f2937 0%, transparent 60%),
+        radial-gradient(900px 700px at 110% 10%, #111827 0%, transparent 60%),
+        var(--bg);
     }
-    .container {
-      max-width: 700px;
-      margin: 30px auto;
-      padding: 20px;
-      background: #1e1e1e;
-      border-radius: 12px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+
+    /* ===== Layout ===== */
+    .wrap{max-width:1000px;margin:0 auto;padding:24px 16px 100px}
+    .header{
+      display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:16px
     }
-    h2 {
-      text-align: left;
-      margin-bottom: 10px;
-      font-size: 18px;
-      color: #1db954;
+    .brand{display:flex;align-items:center;gap:12px}
+    .logo{
+      width:42px;height:42px;border-radius:12px;
+      background:linear-gradient(135deg,var(--green),var(--green-2));
+      display:grid;place-items:center;font-weight:800;color:#04120b;
+      box-shadow:0 16px 36px rgba(34,197,94,.35);
     }
-    .task-input {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 15px;
+    h1{margin:0;font-size:clamp(18px,3.8vw,26px);letter-spacing:.2px}
+    .sub{margin-top:4px;color:var(--muted);font-size:14px}
+
+    /* ===== Glass card ===== */
+    .card{
+      background:linear-gradient(180deg,rgba(255,255,255,.03),transparent 40%), var(--card);
+      border:1px solid var(--border);
+      border-radius:16px;padding:14px 16px;margin-bottom:14px;
+      box-shadow:0 10px 26px rgba(0,0,0,.35);
     }
-    .task-input input[type="text"] {
-      flex: 1;
-      padding: 10px;
-      border: none;
-      border-radius: 8px;
-      background: #2c2c2c;
-      color: #fff;
+
+    /* ===== Status bar (clock) ===== */
+    .topbar{
+      display:flex;align-items:center;gap:10px;margin-bottom:14px
     }
-    .task-input button {
-      padding: 10px 20px;
-      border: none;
-      border-radius: 8px;
-      background: #1db954;
-      color: #fff;
-      cursor: pointer;
-      font-weight: bold;
+    .clock{
+      padding:8px 12px;border-radius:12px;
+      background:linear-gradient(135deg,var(--purple),#9f67ff);
+      color:#fff; font-weight:800; letter-spacing:.3px; min-width:150px;text-align:center;
+      border:none; box-shadow:0 10px 26px rgba(124,58,237,.35);
     }
-    .reminder-inputs {
-      display: flex;
-      gap: 6px;
-      margin-top: 10px;
-      justify-content: center;
+
+    /* ===== Auth row ===== */
+    .auth-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .btn{
+      cursor:pointer;border:none;border-radius:12px;padding:10px 14px;
+      font-weight:800; letter-spacing:.2px;
+      background:linear-gradient(135deg,var(--green),#86efac);
+      color:#04120b; box-shadow:0 12px 26px rgba(34,197,94,.25);
+      transition:transform .06s ease, filter .2s ease, box-shadow .2s ease;
     }
-    .reminder-inputs input {
-      width: 50px;
-      padding: 5px;
-      border-radius: 6px;
-      border: none;
-      background: #2c2c2c;
-      color: #fff;
-      text-align: center;
-      font-size: 13px;
+    .btn.secondary{
+      background:linear-gradient(135deg,var(--blue),#93c5fd);
+      color:#061224; box-shadow:0 12px 26px rgba(59,130,246,.25);
     }
-    ul {
-      list-style: none;
-      padding: 0;
+    .btn.danger{
+      background:linear-gradient(135deg,var(--red),#fda4af);
+      color:#2a0a0a; box-shadow:0 12px 26px rgba(239,68,68,.25);
     }
-    li {
-      background: #2c2c2c;
-      margin-bottom: 10px;
-      padding: 12px;
-      border-radius: 8px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      cursor: grab;
+    .btn:hover{filter:saturate(1.06)}
+    .btn:active{transform:translateY(1px)}
+
+    /* ===== Tabs (lists) ===== */
+    .tabs{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+    .tab{
+      background:var(--card-2); color:#dbe7ff; border:1px solid var(--border);
+      padding:8px 12px;border-radius:999px;cursor:pointer;font-weight:700;
+      transition:border-color .15s ease, box-shadow .15s ease, background .15s ease;
     }
-    li span {
-      font-size: 13px;
-      color: #bbb;
-      margin-left: 8px;
+    .tab:hover{border-color:rgba(255,255,255,.18)}
+    .tab.active{
+      background:linear-gradient(135deg,var(--blue),#60a5fa);
+      color:#081221; border-color:transparent; box-shadow:0 10px 24px var(--ring-soft);
     }
-    .delete-btn {
-      background: #e63946;
-      border: none;
-      padding: 6px 12px;
-      border-radius: 6px;
-      cursor: pointer;
-      color: #fff;
+    .tab.add{background:transparent;color:var(--muted)}
+    .tab.add:hover{color:#c7d2fe;border-color:rgba(255,255,255,.18)}
+
+    /* ===== Inputs ===== */
+    .form-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .input{
+      flex:1 1 280px; min-width:220px;
+      background:var(--bg-accent); color:var(--text);
+      border:1px solid var(--border); outline:none; border-radius:12px;
+      padding:12px 14px; font-size:15px;
+      transition:border-color .15s ease, box-shadow .15s ease;
+    }
+    .input:focus{border-color:var(--ring);box-shadow:0 0 0 3px rgba(59,130,246,.15)}
+    .chip{
+      background:var(--card-2); border:1px solid var(--border);
+      padding:8px 10px;border-radius:10px;color:var(--muted)
+    }
+    .num{width:90px}
+
+    .hint{font-size:12px;color:var(--muted);margin-top:6px}
+
+    /* ===== Task list ===== */
+    .tasks{padding:8px}
+    .task{
+      display:grid; grid-template-columns:auto 1fr auto auto; gap:10px;
+      align-items:center; background:linear-gradient(180deg,rgba(255,255,255,.02),transparent 50%), var(--card);
+      border:1px solid var(--border); border-radius:14px; padding:10px 12px; margin-bottom:10px;
+      transition: border-color .15s ease, transform .08s ease, background .15s ease;
+    }
+    .task:hover{border-color:rgba(255,255,255,.14)}
+    .task.dragging{
+      transform:scale(.995);
+      border-color:var(--ring);
+      box-shadow:0 12px 28px rgba(59,130,246,.2) inset;
+      background:linear-gradient(180deg,rgba(59,130,246,.08),transparent 70%), var(--card);
+    }
+    .task.drop-target{ outline:2px dashed rgba(255,255,255,.2); outline-offset:4px; }
+
+    .title{font-weight:700}
+    .title.done{opacity:.65;text-decoration:line-through}
+    .date{font-size:12px;color:var(--muted);margin-right:8px;white-space:nowrap}
+    .pill{
+      padding:6px 10px;border-radius:999px;font-weight:800;font-size:12px;letter-spacing:.2px;
+      color:#04120b;background:linear-gradient(135deg,#22c55e,#86efac);justify-self:start
+    }
+    .pill.warn{background:linear-gradient(135deg,#f59e0b,#fde68a);color:#221a04}
+    .iconbtn{
+      border:1px solid var(--border); background:var(--card-2);
+      color:#e7eefc; border-radius:10px; padding:7px 10px; cursor:pointer;
+      transition:background .15s ease, border-color .15s ease; font-weight:800;
+    }
+    .iconbtn:hover{border-color:rgba(255,255,255,.18)}
+    .iconbtn.danger{background:linear-gradient(135deg, #ef4444, #fda4af);color:#2a0a0a;border:none}
+    .empty{color:var(--muted); text-align:center; padding:16px}
+
+    /* ===== Section headers (glass) ===== */
+    .hero{
+      border:1px solid var(--border);
+      background:
+        radial-gradient(1200px 300px at 20% -40%, rgba(96,165,250,.12), transparent 60%),
+        linear-gradient(180deg, rgba(255,255,255,.03), transparent 50%), var(--card);
+      border-radius:18px; padding:18px 16px; margin-bottom:14px;
+      box-shadow: 0 10px 26px rgba(0,0,0,.35);
+    }
+    .hero h2{margin:0 0 6px 0; font-size:22px}
+    .hero p{margin:0; color:var(--muted); font-size:14px}
+
+    /* ===== Footer sticky note ===== */
+    .sticky-note{
+      position:fixed; right:16px; bottom:16px;
+      background:linear-gradient(135deg,var(--purple),#9f67ff);
+      color:white; padding:10px 12px; border-radius:12px; font-weight:800; letter-spacing:.2px;
+      box-shadow:0 12px 26px rgba(124,58,237,.35);
     }
   </style>
 </head>
 <body>
-  <header>আমার দৈনন্দিন কাজের তালিকা</header>
-  
-  <div class="container">
-    <h2>আজকের কাজ</h2>
-    
-    <div class="task-input">
-      <input type="text" id="taskInput" placeholder="কাজ যোগ করুন...">
-      <button onclick="addTask()">Add</button>
-    </div>
+  <div id="root"></div>
 
-    <div class="reminder-inputs">
-      <input type="number" id="hours" placeholder="ঘন্টা">
-      <input type="number" id="minutes" placeholder="মিনিট">
-      <input type="number" id="seconds" placeholder="সেকেন্ড">
-    </div>
+  <script type="module">
+    /* ===== Imports ===== */
+    import React,{useEffect,useState,useRef} from 'https://esm.sh/react@18.3.1';
+    import { createRoot } from 'https://esm.sh/react-dom@18.3.1/client';
 
-    <ul id="taskList"></ul>
-  </div>
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import {
+      getAuth,onAuthStateChanged,GoogleAuthProvider,signInWithPopup,signOut
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import {
+      getFirestore,collection,addDoc,doc,deleteDoc,updateDoc,onSnapshot,query,orderBy,serverTimestamp,
+      writeBatch
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-  <script>
-    const taskList = document.getElementById("taskList");
+    /* ===== Firebase config (unchanged) ===== */
+    const firebaseConfig = {
+      apiKey: "AIzaSyAyZE7srt9ODVr4umkqqzn7mmgCURM4vLA",
+      authDomain: "to-do-list-fdcf2.firebaseapp.com",
+      databaseURL: "https://to-do-list-fdcf2-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "to-do-list-fdcf2",
+      storageBucket: "to-do-list-fdcf2.appspot.com",
+      messagingSenderId: "851462607587",
+      appId: "1:851462607587:web:3b82f5fe257a0b60b22bd6",
+      measurementId: "G-P8K1QBKMX6"
+    };
+    const app=initializeApp(firebaseConfig);
+    const auth=getAuth(app);
+    const db=getFirestore(app);
 
-    function formatDate() {
-      const now = new Date();
-      const day = now.getDate();
-      const month = now.toLocaleString('en-US', { month: 'short' });
-      let hours = now.getHours();
-      const minutes = now.getMinutes().toString().padStart(2, '0');
-      const ampm = hours >= 12 ? 'PM' : 'AM';
-      hours = hours % 12 || 12;
-      return `${day} ${month} ; ${hours}:${minutes} ${ampm}`;
-    }
-
-    function addTask() {
-      const taskInput = document.getElementById("taskInput");
-      const taskText = taskInput.value.trim();
-      if (taskText === "") return;
-
-      const li = document.createElement("li");
-      li.draggable = true;
-
-      const taskTitle = document.createElement("strong");
-      taskTitle.textContent = taskText;
-
-      const span = document.createElement("span");
-      span.textContent = formatDate();
-
-      li.appendChild(taskTitle);
-      li.appendChild(span);
-
-      const delBtn = document.createElement("button");
-      delBtn.textContent = "X";
-      delBtn.className = "delete-btn";
-      delBtn.onclick = () => li.remove();
-      li.appendChild(delBtn);
-
-      taskList.appendChild(li);
-      taskInput.value = "";
-
-      addDragEvents(li);
-    }
-
-    function addDragEvents(item) {
-      item.addEventListener("dragstart", () => {
-        item.classList.add("dragging");
-      });
-      item.addEventListener("dragend", () => {
-        item.classList.remove("dragging");
-      });
-    }
-
-    taskList.addEventListener("dragover", e => {
-      e.preventDefault();
-      const dragging = document.querySelector(".dragging");
-      const afterElement = getDragAfterElement(taskList, e.clientY);
-      if (afterElement == null) {
-        taskList.appendChild(dragging);
-      } else {
-        taskList.insertBefore(dragging, afterElement);
+    /* ===== Audio (reminder chime) ===== */
+    let audioCtx=null;
+    function ensureAudio(){
+      if(!audioCtx){
+        audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+        const unlock=()=>{ if(audioCtx.state==='suspended') audioCtx.resume(); window.removeEventListener('pointerdown',unlock); };
+        window.addEventListener('pointerdown',unlock,{once:true});
       }
-    });
-
-    function getDragAfterElement(container, y) {
-      const draggableElements = [...container.querySelectorAll("li:not(.dragging)")];
-      return draggableElements.reduce((closest, child) => {
-        const box = child.getBoundingClientRect();
-        const offset = y - box.top - box.height / 2;
-        if (offset < 0 && offset > closest.offset) {
-          return { offset: offset, element: child };
-        } else {
-          return closest;
-        }
-      }, { offset: Number.NEGATIVE_INFINITY }).element;
     }
+    function playReminderTone(){
+      try{
+        ensureAudio();
+        const ctx=audioCtx;if(!ctx)return;
+        const now=ctx.currentTime+0.05;
+        const gain=ctx.createGain();
+        gain.gain.setValueAtTime(0.0001,now);
+        gain.connect(ctx.destination);
+        const notes=[
+          {f:523.25,d:0.20},{f:659.25,d:0.18},{f:783.99,d:0.22},{f:1046.50,d:0.30}
+        ];
+        let t=now;
+        notes.forEach(n=>{
+          const o=ctx.createOscillator();
+          o.type='sine'; o.frequency.setValueAtTime(n.f,t);
+          o.connect(gain);
+          gain.gain.exponentialRampToValueAtTime(0.4,t+0.02);
+          gain.gain.exponentialRampToValueAtTime(0.001,t+n.d);
+          o.start(t); o.stop(t+n.d+0.02);
+          t+=n.d*0.9;
+        });
+      }catch(e){}
+    }
+    function scheduleLocalReminder(title,delayMs){
+      if(delayMs==null) return;
+      ensureAudio();
+      const trigger=()=>{
+        playReminderTone();
+        if('Notification'in window){
+          const fire=()=>new Notification('রিমাইন্ডার', { body:'মনে কর: '+title });
+          if(Notification.permission==='granted') fire();
+          else Notification.requestPermission().then(p=>{ if(p==='granted') fire(); });
+        }
+      };
+      setTimeout(trigger,delayMs);
+    }
+
+    /* ===== UI bits ===== */
+    function Clock(){
+      const [now,setNow]=useState(new Date());
+      useEffect(()=>{const t=setInterval(()=>setNow(new Date()),1000); return ()=>clearInterval(t)},[]);
+      const timeStr=new Intl.DateTimeFormat('bn-BD',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true}).format(now);
+      return React.createElement('div',{className:'clock'},timeStr);
+    }
+
+    function Header({user,onSignIn,onSignOut}){
+      return React.createElement(React.Fragment,null,
+        React.createElement('div',{className:'header'},
+          React.createElement('div',{className:'brand'},
+            React.createElement('div',{className:'logo'}, 'TK'),
+            React.createElement('div',null,
+              React.createElement('h1',null,'আমার দৈনন্দিন কাজের তালিকা'),
+              React.createElement('div',{className:'sub'},'পরিষ্কার, দ্রুত, Spotify-style ডার্ক UI')
+            )
+          ),
+          React.createElement('div',null,
+            user
+              ? React.createElement('button',{className:'btn danger', onClick:onSignOut},'Sign Out')
+              : React.createElement('button',{className:'btn', onClick:onSignIn},'Google দিয়ে সাইন-ইন')
+          )
+        ),
+        React.createElement('div',{className:'hero'},
+          React.createElement('h2',null,'আজকের লক্ষ্য'),
+          React.createElement('p',null,'কাজ যোগ করুন, রিমাইন্ডার সেট করুন, সম্পন্ন করে ফেলুন — সবকিছু এক জায়গায়।')
+        )
+      );
+    }
+
+    function TopBar(){
+      return React.createElement('div',{className:'topbar'},
+        React.createElement(Clock,null)
+      );
+    }
+
+    function Tabs({lists,active,onSelect,onAdd}){
+      return React.createElement('div',{className:'tabs'},
+        lists.map(l=>React.createElement('button',{
+          key:l.id,
+          className:'tab'+(active===l.id?' active':''),
+          onClick:()=>onSelect(l.id)
+        },l.name)),
+        React.createElement('button',{className:'tab add',onClick:onAdd},'+ লিস্ট')
+      );
+    }
+
+    function AddTask({onAdd, topOrder}){
+      const [title,setTitle]=useState('');
+      const [r,setR]=useState(false);
+      const [h,setH]=useState(''); const [m,setM]=useState(''); const [s,setS]=useState('');
+      const submit=e=>{
+        e.preventDefault();
+        const t=title.trim(); if(!t) return;
+        let delay=null;
+        if(r){
+          const hh=Math.max(0,parseInt(h||'0',10)||0);
+          const mm=Math.max(0,parseInt(m||'0',10)||0);
+          const ss=Math.max(0,parseInt(s||'0',10)||0);
+          delay=(hh*3600+mm*60+ss)*1000; if(delay<=0) delay=null;
+        }
+        onAdd({title:t,delayMs:delay,topOrder});
+        setTitle(''); setH(''); setM(''); setS(''); setR(false);
+      };
+      return React.createElement('form',{onSubmit:submit, className:'card'},
+        React.createElement('div',{className:'form-row'},
+          React.createElement('input',{className:'input',type:'text',placeholder:'কাজ যোগ করুন…',value:title,onChange:e=>setTitle(e.target.value)}),
+          React.createElement('button',{className:'btn secondary',type:'submit'},'Add')
+        ),
+        React.createElement('div',{className:'form-row',style:{marginTop:'10px'}},
+          React.createElement('label',{className:'chip'},
+            React.createElement('input',{type:'checkbox',checked:r,onChange:e=>setR(e.target.checked),style:{marginRight:'6px'}}),
+            'রিমাইন্ডার'
+          ),
+          React.createElement('input',{className:'input num',type:'number',min:'0',placeholder:'ঘন্টা',value:h,onChange:e=>setH(e.target.value),disabled:!r}),
+          React.createElement('input',{className:'input num',type:'number',min:'0',placeholder:'মিনিট',value:m,onChange:e=>setM(e.target.value),disabled:!r}),
+          React.createElement('input',{className:'input num',type:'number',min:'0',placeholder:'সেকেন্ড',value:s,onChange:e=>setS(e.target.value),disabled:!r})
+        ),
+        React.createElement('div',{className:'hint'}, r ? 'সময় হলে নোটিফিকেশন + চিম বাজবে (ট্যাব খোলা থাকলে)।' : 'রিমাইন্ডার না চাইলে টিক দেবেন না।')
+      );
+    }
+
+    /* ===== Drag & Drop Task List ===== */
+    function TaskList({tasks,onToggle,onDelete,onReorder}){
+      const dragIndexRef = useRef(null);
+      const [dragging, setDragging] = useState(null); // task id
+      const [overId, setOverId] = useState(null);
+
+      const onDragStart = (idx, id) => (e) => {
+        dragIndexRef.current = idx;
+        setDragging(id);
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', id);
+      };
+      const onDragOver = (idx, id) => (e) => {
+        e.preventDefault(); // allow drop
+        setOverId(id);
+        e.dataTransfer.dropEffect = 'move';
+      };
+      const onDragEnd = () => {
+        dragIndexRef.current = null;
+        setDragging(null);
+        setOverId(null);
+      };
+      const onDrop = (idx, id) => (e) => {
+        e.preventDefault();
+        const from = dragIndexRef.current;
+        const to = idx;
+        onDragEnd();
+        if (from==null || to==null || from===to) return;
+        onReorder(from, to);
+      };
+
+      const fmt=ts=>{
+        if(!ts) return '';
+        const d=ts.toDate();
+        return new Intl.DateTimeFormat('bn-BD',{dateStyle:'medium'}).format(d);
+      };
+
+      if(!tasks.length) return React.createElement('div',{className:'card empty'},'কোনো কাজ নেই');
+
+      return React.createElement('div',{className:'tasks card'},
+        tasks.map((t, idx) =>
+          React.createElement('div',{
+            key:t.id,
+            className:
+              'task' +
+              (dragging===t.id ? ' dragging' : '') +
+              (overId===t.id && dragging!==t.id ? ' drop-target':''),
+            draggable:true,
+            onDragStart:onDragStart(idx, t.id),
+            onDragOver:onDragOver(idx, t.id),
+            onDrop:onDrop(idx, t.id),
+            onDragEnd:onDragEnd
+          },
+            React.createElement('input',{type:'checkbox',checked:t.completed,onChange:()=>onToggle(t)}),
+            React.createElement('div',null,
+              React.createElement('div',{className:'title '+(t.completed?'done':'')}, t.title),
+              React.createElement('div',{className:'date'}, fmt(t.createdAt), t.reminderAt? ' · রিমাইন্ডার সেট' : '')
+            ),
+            t.reminderAt
+              ? React.createElement('span',{className:'pill warn'},'REMINDER')
+              : React.createElement('span',{className:'pill'}, t.completed?'DONE':'NEW'),
+            React.createElement('button',{className:'iconbtn danger',onClick:()=>onDelete(t)},'Delete')
+          )
+        )
+      );
+    }
+
+    /* ===== App (adds order + reorder persistence) ===== */
+    function App(){
+      const [user,setUser]=useState(null);
+      const [lists,setLists]=useState([]);
+      const [active,setActive]=useState(null);
+      const [tasks,setTasks]=useState([]);
+
+      useEffect(()=>onAuthStateChanged(auth,u=>{setUser(u)}),[]);
+
+      // Load lists
+      useEffect(()=>{
+        if(user){
+          const unsub=onSnapshot(collection(db,'users',user.uid,'lists'),snap=>{
+            const data=snap.docs.map(d=>({id:d.id,...d.data()}));
+            setLists(data);
+            if(!active && data.length) setActive(data[0].id);
+          });
+          return unsub;
+        } else {
+          setLists([]); setActive(null); setTasks([]);
+        }
+      },[user]);
+
+      // Load tasks (we'll fetch then sort locally by `order` ascending)
+      useEffect(()=>{
+        if(user && active){
+          // keep createdAt for fallback, but we'll sort by order locally
+          const q=query(collection(db,'users',user.uid,'lists',active,'tasks'), orderBy('createdAt','desc'));
+          const unsub=onSnapshot(q,snap=>{
+            const arr = snap.docs.map(d=>({id:d.id,...d.data()}));
+            // ensure `order` exists (fallback: index)
+            let normalized = arr.slice().sort((a,b)=>{
+              const ao = (a.order ?? Number.MAX_SAFE_INTEGER);
+              const bo = (b.order ?? Number.MAX_SAFE_INTEGER);
+              if (ao!==bo) return ao - bo;
+              // fallback by createdAt desc
+              const at = a.createdAt?.toMillis?.() ?? 0;
+              const bt = b.createdAt?.toMillis?.() ?? 0;
+              return bt - at;
+            });
+            setTasks(normalized);
+          });
+          return unsub;
+        } else {
+          setTasks([]);
+        }
+      },[user,active]);
+
+      const provider=new GoogleAuthProvider();
+      const signIn=()=>{ ensureAudio(); signInWithPopup(auth,provider).catch(e=>alert('Sign-in error: '+e.message)); };
+      const signOutNow=()=>signOut(auth);
+
+      const addList=async()=>{
+        const name=prompt('লিস্টের নাম দিন'); if(!name || !user) return;
+        await addDoc(collection(db,'users',user.uid,'lists'),{name});
+      };
+
+      // helper: compute top order (smallest)
+      const topOrderValue = () => {
+        if (!tasks.length) return 0;
+        const min = Math.min(...tasks.map(t => (t.order ?? Number.MAX_SAFE_INTEGER)));
+        return isFinite(min) ? min - 1 : 0;
+        // new item gets (min-1) so it appears at top
+      };
+
+      const addTask=async({title,delayMs}={})=>{
+        if(!(user&&active)) return;
+        const data={ title, completed:false, createdAt:serverTimestamp(), order: topOrderValue() };
+        if(delayMs!=null){ data.reminderAt=new Date(Date.now()+delayMs).toISOString(); }
+        await addDoc(collection(db,'users',user.uid,'lists',active,'tasks'),data);
+        if(delayMs!=null) scheduleLocalReminder(title,delayMs);
+      };
+
+      const toggleTask=async(task)=>{
+        await updateDoc(doc(db,'users',user.uid,'lists',active,'tasks',task.id),{completed:!task.completed});
+      };
+
+      const deleteTask=async(task)=>{
+        await deleteDoc(doc(db,'users',user.uid,'lists',active,'tasks',task.id));
+      };
+
+      // Drag & Drop reorder: optimistic UI + batch persist
+      const reorderTasks = async (fromIndex, toIndex) => {
+        if (fromIndex===toIndex) return;
+        // Optimistic local reorder
+        const newList = tasks.slice();
+        const [moved] = newList.splice(fromIndex, 1);
+        newList.splice(toIndex, 0, moved);
+        // Recompute order sequentially
+        const recomputed = newList.map((t,i)=>({...t, order:i}));
+        setTasks(recomputed);
+
+        // Persist with batch
+        try{
+          const batch = writeBatch(db);
+          for (let i=0; i<recomputed.length; i++){
+            const t = recomputed[i];
+            const ref = doc(db,'users',user.uid,'lists',active,'tasks',t.id);
+            batch.update(ref, { order: i });
+          }
+          await batch.commit();
+        }catch(e){
+          console.error('Reorder persist error:', e);
+          // if fails, let snapshot from backend realign
+        }
+      };
+
+      return React.createElement('div',{className:'wrap'},
+        React.createElement(Header,{user,onSignIn:signIn,onSignOut:signOutNow}),
+        React.createElement(TopBar,null),
+        user && React.createElement('div',{className:'card'},
+          React.createElement('div',{className:'auth-row'},
+            React.createElement('div',null, 'স্বাগতম'+ (user?.displayName? ', '+user.displayName : '')),
+            React.createElement('div',null,
+              React.createElement('span',{style:{color: 'var(--muted)',fontSize:'12px'}}, user?.email||'')
+            )
+          )
+        ),
+        user && React.createElement(Tabs,{lists,active,onSelect:setActive,onAdd:addList}),
+        user && active && React.createElement(AddTask,{onAdd:addTask, topOrder: topOrderValue()}),
+        user && active && React.createElement(TaskList,{
+          tasks,
+          onToggle:toggleTask,
+          onDelete:deleteTask,
+          onReorder:reorderTasks
+        }),
+        !user && React.createElement('div',{className:'card'}, 'সাইন-ইন করলে আপনার লিস্ট ও টাস্ক দেখা যাবে।')
+      );
+    }
+
+    createRoot(document.getElementById('root')).render(React.createElement(App));
   </script>
+
+  <!-- small sticky note -->
+  <div class="sticky-note">Drag & Drop • Persisted</div>
 </body>
 </html>
