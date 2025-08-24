@@ -9,7 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;600;700&display=swap" rel="stylesheet">
 
   <style>
-    /* ===== Theme (Spotify-like dark) ===== */
+    /* ===== Theme ===== */
     :root{
       --bg:#0f1115;
       --bg-accent:#0b0f14;
@@ -41,18 +41,9 @@
 
     /* ===== Layout ===== */
     .wrap{max-width:1000px;margin:0 auto;padding:24px 16px 100px}
-    .header{
-      display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:16px
-    }
+    .header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:16px}
     .brand{display:flex;align-items:center;gap:12px}
-    .logo{
-      width:42px;height:42px;border-radius:12px;
-      background:linear-gradient(135deg,var(--green),var(--green-2));
-      display:grid;place-items:center;font-weight:800;color:#04120b;
-      box-shadow:0 16px 36px rgba(34,197,94,.35);
-    }
     h1{margin:0;font-size:clamp(18px,3.8vw,26px);letter-spacing:.2px}
-    .sub{margin-top:4px;color:var(--muted);font-size:14px}
 
     /* ===== Glass card ===== */
     .card{
@@ -62,19 +53,7 @@
       box-shadow:0 10px 26px rgba(0,0,0,.35);
     }
 
-    /* ===== Status bar (clock) ===== */
-    .topbar{
-      display:flex;align-items:center;gap:10px;margin-bottom:14px
-    }
-    .clock{
-      padding:8px 12px;border-radius:12px;
-      background:linear-gradient(135deg,var(--purple),#9f67ff);
-      color:#fff; font-weight:800; letter-spacing:.3px; min-width:150px;text-align:center;
-      border:none; box-shadow:0 10px 26px rgba(124,58,237,.35);
-    }
-
-    /* ===== Auth row ===== */
-    .auth-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+    /* ===== Buttons ===== */
     .btn{
       cursor:pointer;border:none;border-radius:12px;padding:10px 14px;
       font-weight:800; letter-spacing:.2px;
@@ -93,7 +72,7 @@
     .btn:hover{filter:saturate(1.06)}
     .btn:active{transform:translateY(1px)}
 
-    /* ===== Tabs (lists) ===== */
+    /* ===== Tabs ===== */
     .tabs{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
     .tab{
       background:var(--card-2); color:#dbe7ff; border:1px solid var(--border);
@@ -114,7 +93,7 @@
       flex:1 1 280px; min-width:220px;
       background:var(--bg-accent); color:var(--text);
       border:1px solid var(--border); outline:none; border-radius:12px;
-      padding:12px 14px; font-size:15px;
+      padding:10px 12px; font-size:15px;
       transition:border-color .15s ease, box-shadow .15s ease;
     }
     .input:focus{border-color:var(--ring);box-shadow:0 0 0 3px rgba(59,130,246,.15)}
@@ -122,15 +101,16 @@
       background:var(--card-2); border:1px solid var(--border);
       padding:8px 10px;border-radius:10px;color:var(--muted)
     }
-    .num{width:90px}
+    .num{width:70px} /* ছোট করা হয়েছে */
 
     .hint{font-size:12px;color:var(--muted);margin-top:6px}
 
     /* ===== Task list ===== */
     .tasks{padding:8px}
     .task{
-      display:grid; grid-template-columns:auto 1fr auto auto; gap:10px;
-      align-items:center; background:linear-gradient(180deg,rgba(255,255,255,.02),transparent 50%), var(--card);
+      display:grid; grid-template-columns:auto 1fr auto auto;
+      gap:10px; align-items:center;
+      background:linear-gradient(180deg,rgba(255,255,255,.02),transparent 50%), var(--card);
       border:1px solid var(--border); border-radius:14px; padding:10px 12px; margin-bottom:10px;
       transition: border-color .15s ease, transform .08s ease, background .15s ease;
     }
@@ -160,7 +140,23 @@
     .iconbtn.danger{background:linear-gradient(135deg, #ef4444, #fda4af);color:#2a0a0a;border:none}
     .empty{color:var(--muted); text-align:center; padding:16px}
 
-    /* ===== Section headers (glass) ===== */
+    /* ===== Complete toggle (green round button) ===== */
+    .checkbtn{
+      width:30px;height:30px;border-radius:999px;border:1px solid var(--border);
+      background:var(--card-2); color:#A7F3D0; /* pale green text */
+      display:grid;place-items:center; font-weight:900; cursor:pointer;
+      transition:transform .06s ease, filter .2s ease, box-shadow .2s ease, background .15s ease;
+    }
+    .checkbtn:active{transform:translateY(1px)}
+    .checkbtn.done{
+      background:linear-gradient(135deg,var(--green),#86efac);
+      color:#063; /* deep green tick */
+      border:none; box-shadow:0 8px 18px rgba(34,197,94,.25);
+    }
+    .checkbtn span{font-size:16px;line-height:1}
+    .checkbtn.done span{color:#04120b} /* dark text over green */
+
+    /* ===== Section headers ===== */
     .hero{
       border:1px solid var(--border);
       background:
@@ -172,7 +168,7 @@
     .hero h2{margin:0 0 6px 0; font-size:22px}
     .hero p{margin:0; color:var(--muted); font-size:14px}
 
-    /* ===== Footer sticky note ===== */
+    /* ===== Sticky note ===== */
     .sticky-note{
       position:fixed; right:16px; bottom:16px;
       background:linear-gradient(135deg,var(--purple),#9f67ff);
@@ -198,7 +194,7 @@
       writeBatch
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-    /* ===== Firebase config (unchanged) ===== */
+    /* ===== Firebase config (from your app) ===== */
     const firebaseConfig = {
       apiKey: "AIzaSyAyZE7srt9ODVr4umkqqzn7mmgCURM4vLA",
       authDomain: "to-do-list-fdcf2.firebaseapp.com",
@@ -260,21 +256,12 @@
     }
 
     /* ===== UI bits ===== */
-    function Clock(){
-      const [now,setNow]=useState(new Date());
-      useEffect(()=>{const t=setInterval(()=>setNow(new Date()),1000); return ()=>clearInterval(t)},[]);
-      const timeStr=new Intl.DateTimeFormat('bn-BD',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true}).format(now);
-      return React.createElement('div',{className:'clock'},timeStr);
-    }
-
     function Header({user,onSignIn,onSignOut}){
       return React.createElement(React.Fragment,null,
         React.createElement('div',{className:'header'},
           React.createElement('div',{className:'brand'},
-            React.createElement('div',{className:'logo'}, 'TK'),
             React.createElement('div',null,
-              React.createElement('h1',null,'আমার দৈনন্দিন কাজের তালিকা'),
-              React.createElement('div',{className:'sub'},'পরিষ্কার, দ্রুত, Spotify-style ডার্ক UI')
+              React.createElement('h1',null,'আমার দৈনন্দিন কাজের তালিকা')
             )
           ),
           React.createElement('div',null,
@@ -287,12 +274,6 @@
           React.createElement('h2',null,'আজকের লক্ষ্য'),
           React.createElement('p',null,'কাজ যোগ করুন, রিমাইন্ডার সেট করুন, সম্পন্ন করে ফেলুন — সবকিছু এক জায়গায়।')
         )
-      );
-    }
-
-    function TopBar(){
-      return React.createElement('div',{className:'topbar'},
-        React.createElement(Clock,null)
       );
     }
 
@@ -395,7 +376,12 @@
             onDrop:onDrop(idx, t.id),
             onDragEnd:onDragEnd
           },
-            React.createElement('input',{type:'checkbox',checked:t.completed,onChange:()=>onToggle(t)}),
+            // Green round button instead of checkbox
+            React.createElement('button',{
+              className:'checkbtn'+(t.completed?' done':''),
+              onClick:()=>onToggle(t),
+              title:t.completed?'সম্পন্ন হয়েছে':'সম্পন্ন করুন'
+            }, React.createElement('span',null, t.completed ? '✓' : '')),
             React.createElement('div',null,
               React.createElement('div',{className:'title '+(t.completed?'done':'')}, t.title),
               React.createElement('div',{className:'date'}, fmt(t.createdAt), t.reminderAt? ' · রিমাইন্ডার সেট' : '')
@@ -409,7 +395,7 @@
       );
     }
 
-    /* ===== App (adds order + reorder persistence) ===== */
+    /* ===== App ===== */
     function App(){
       const [user,setUser]=useState(null);
       const [lists,setLists]=useState([]);
@@ -432,19 +418,16 @@
         }
       },[user]);
 
-      // Load tasks (we'll fetch then sort locally by `order` ascending)
+      // Load tasks (sorted locally by order)
       useEffect(()=>{
         if(user && active){
-          // keep createdAt for fallback, but we'll sort by order locally
           const q=query(collection(db,'users',user.uid,'lists',active,'tasks'), orderBy('createdAt','desc'));
           const unsub=onSnapshot(q,snap=>{
             const arr = snap.docs.map(d=>({id:d.id,...d.data()}));
-            // ensure `order` exists (fallback: index)
             let normalized = arr.slice().sort((a,b)=>{
               const ao = (a.order ?? Number.MAX_SAFE_INTEGER);
               const bo = (b.order ?? Number.MAX_SAFE_INTEGER);
               if (ao!==bo) return ao - bo;
-              // fallback by createdAt desc
               const at = a.createdAt?.toMillis?.() ?? 0;
               const bt = b.createdAt?.toMillis?.() ?? 0;
               return bt - at;
@@ -470,8 +453,7 @@
       const topOrderValue = () => {
         if (!tasks.length) return 0;
         const min = Math.min(...tasks.map(t => (t.order ?? Number.MAX_SAFE_INTEGER)));
-        return isFinite(min) ? min - 1 : 0;
-        // new item gets (min-1) so it appears at top
+        return isFinite(min) ? min - 1 : 0; // new item goes to top
       };
 
       const addTask=async({title,delayMs}={})=>{
@@ -512,13 +494,12 @@
           await batch.commit();
         }catch(e){
           console.error('Reorder persist error:', e);
-          // if fails, let snapshot from backend realign
+          // if fails, Firestore snapshot will realign
         }
       };
 
       return React.createElement('div',{className:'wrap'},
         React.createElement(Header,{user,onSignIn:signIn,onSignOut:signOutNow}),
-        React.createElement(TopBar,null),
         user && React.createElement('div',{className:'card'},
           React.createElement('div',{className:'auth-row'},
             React.createElement('div',null, 'স্বাগতম'+ (user?.displayName? ', '+user.displayName : '')),
@@ -527,7 +508,7 @@
             )
           )
         ),
-        user && React.createElement(Tabs,{lists,active,onSelect:setActive,onAdd:addList}),
+        user && React.createElement(Tabs,{lists,active:onSelectList,setActive,onSelect:setActive,onAdd:addList}),
         user && active && React.createElement(AddTask,{onAdd:addTask, topOrder: topOrderValue()}),
         user && active && React.createElement(TaskList,{
           tasks,
