@@ -79,7 +79,7 @@ function scheduleLocalReminder(title,delayMs){ if(delayMs==null)return; ensureAu
 /* Components */
 function Clock(){ const [now,setNow]=useState(new Date()); useEffect(()=>{const t=setInterval(()=>setNow(new Date()),1000); return ()=>clearInterval(t)},[]); const str=new Intl.DateTimeFormat('bn-BD',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true}).format(now); return React.createElement('div',{className:'clock'},str); }
 
-function Header({user,onSignIn,onSignOut}){ return React.createElement('div',{className:'header'}, React.createElement('div',{className:'brand'}, React.createElement('div',{className:'logo'},''), React.createElement('div',null,React.createElement('h1',null,'আমার দৈনন্দিন কাজের তালিকা'), React.createElement('div',{className:'sub'},'Spotify-style Dark UI'))), user?React.createElement('button',{className:'btn danger',onClick:onSignOut},'Sign Out'):React.createElement('button',{className:'btn',onClick:onSignIn},'Google দিয়ে সাইন ইন')); }
+function Header({user,onSignIn,onSignOut}){ return React.createElement('div',{className:'header'}, React.createElement('div',{className:'brand'}, React.createElement('div',{className:'logo'},''), React.createElement('div',null,React.createElement('h1',null,'আমার দৈনন্দিন কাজের তালিকা'), React.createElement('div',{className:'sub'},''))), user?React.createElement('button',{className:'btn danger',onClick:onSignOut},'Sign Out'):React.createElement('button',{className:'btn',onClick:onSignIn},'Google দিয়ে সাইন ইন')); }
 
 function TopBar(){ return React.createElement('div',{className:'topbar'},React.createElement(Clock)); }
 
