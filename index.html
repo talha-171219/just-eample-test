@@ -52,7 +52,7 @@
       box-shadow:0 16px 36px rgba(34,197,94,.35);
     }
     h1{margin:0;font-size:clamp(18px,3.8vw,26px);letter-spacing:.2px}
-    .sub{margin-top:4px;color:var(--muted);font-size:14px}
+    .sub{display:none}
 
     /* ===== Glass card ===== */
     .card{
@@ -62,16 +62,7 @@
       box-shadow:0 10px 26px rgba(0,0,0,.35);
     }
 
-    /* ===== Status bar (clock) ===== */
-    .topbar{
-      display:flex;align-items:center;gap:10px;margin-bottom:14px
-    }
-    .clock{
-      padding:8px 12px;border-radius:12px;
-      background:linear-gradient(135deg,var(--purple),#9f67ff);
-      color:#fff; font-weight:800; letter-spacing:.3px; min-width:150px;text-align:center;
-      border:none; box-shadow:0 10px 26px rgba(124,58,237,.35);
-    }
+    /* (Removed clock + topbar styles) */
 
     /* ===== Auth row ===== */
     .auth-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
@@ -247,21 +238,15 @@
     }
 
     /* ===== UI bits ===== */
-    function Clock(){
-      const [now,setNow]=useState(new Date());
-      useEffect(()=>{const t=setInterval(()=>setNow(new Date()),1000); return ()=>clearInterval(t)},[]);
-      const timeStr=new Intl.DateTimeFormat('bn-BD',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true}).format(now);
-      return React.createElement('div',{className:'clock'},timeStr);
-    }
-
     function Header({user,onSignIn,onSignOut}){
       return React.createElement(React.Fragment,null,
         React.createElement('div',{className:'header'},
           React.createElement('div',{className:'brand'},
-            React.createElement('div',{className:'logo'}, 'TK'),
+            // Empty logo (removed "TK" text)
+            React.createElement('div',{className:'logo'}),
             React.createElement('div',null,
-              React.createElement('h1',null,'আমার দৈনন্দিন কাজের তালিকা'),
-              React.createElement('div',{className:'sub'},'পরিষ্কার, দ্রুত, Spotify-style ডার্ক UI')
+              React.createElement('h1',null,'আমার দৈনন্দিন কাজের তালিকা')
+              // subtitle removed
             )
           ),
           React.createElement('div',null,
@@ -277,12 +262,78 @@
       );
     }
 
-    function TopBar(){
-      return React.createElement('div',{className:'topbar'},
-        React.createElement(Clock,null)
+    /* ===== App (logic unchanged) ===== */
+    function App(){
+      const [user,setUser]=useState(null);
+      const [lists,setLists]=useState([]);
+      const [active,setActive]=useState(null);
+      const [tasks,setTasks]=useState([]);
+
+      useEffect(()=>onAuthStateChanged(auth,u=>{setUser(u)}),[]);
+
+      useEffect(()=>{
+        if(user){
+          const unsub=onSnapshot(collection(db,'users',user.uid,'lists'),snap=>{
+            const data=snap.docs.map(d=>({id:d.id,...d.data()}));
+            setLists(data);
+            if(!active && data.length) setActive(data[0].id);
+          });
+          return unsub;
+        } else {
+          setLists([]); setActive(null); setTasks([]);
+        }
+      },[user]);
+
+      useEffect(()=>{
+        if(user && active){
+          const q=query(collection(db,'users',user.uid,'lists',active,'tasks'),orderBy('createdAt','desc'));
+          const unsub=onSnapshot(q,snap=>setTasks(snap.docs.map(d=>({id:d.id,...d.data()}))));
+          return unsub;
+        } else {
+          setTasks([]);
+        }
+      },[user,active]);
+
+      const provider=new GoogleAuthProvider();
+      const signIn=()=>{ ensureAudio(); signInWithPopup(auth,provider).catch(e=>alert('Sign-in error: '+e.message)); };
+      const signOutNow=()=>signOut(auth);
+
+      const addList=async()=>{
+        const name=prompt('লিস্টের নাম দিন'); if(!name || !user) return;
+        await addDoc(collection(db,'users',user.uid,'lists'),{name});
+      };
+      const addTask=async({title,delayMs})=>{
+        if(!(user&&active)) return;
+        const data={ title, completed:false, createdAt:serverTimestamp() };
+        if(delayMs!=null){ data.reminderAt=new Date(Date.now()+delayMs).toISOString(); }
+        await addDoc(collection(db,'users',user.uid,'lists',active,'tasks'),data);
+        if(delayMs!=null) scheduleLocalReminder(title,delayMs);
+      };
+      const toggleTask=async(task)=>{
+        await updateDoc(doc(db,'users',user.uid,'lists',active,'tasks',task.id),{completed:!task.completed});
+      };
+      const deleteTask=async(task)=>{
+        await deleteDoc(doc(db,'users',user.uid,'lists',active,'tasks',task.id));
+      };
+
+      return React.createElement('div',{className:'wrap'},
+        React.createElement(Header,{user,onSignIn:signIn,onSignOut:signOutNow}),
+        user && React.createElement('div',{className:'card'},
+          React.createElement('div',{className:'auth-row'},
+            React.createElement('div',null, 'স্বাগতম'+ (user?.displayName? ', '+user.displayName : '')),
+            React.createElement('div',null,
+              React.createElement('span',{style:{color: 'var(--muted)',fontSize:'12px'}}, user?.email||'')
+            )
+          )
+        ),
+        user && React.createElement(Tabs,{lists,active,onSelect:setActive,onAdd:addList}),
+        user && active && React.createElement(AddTask,{onAdd:addTask}),
+        user && active && React.createElement(TaskList,{tasks,onToggle:toggleTask,onDelete:deleteTask}),
+        !user && React.createElement('div',{className:'card'}, 'সাইন-ইন করলে আপনার লিস্ট ও টাস্ক দেখা যাবে।')
       );
     }
 
+    /* ===== Tabs, AddTask, TaskList (unchanged from your version) ===== */
     function Tabs({lists,active,onSelect,onAdd}){
       return React.createElement('div',{className:'tabs'},
         lists.map(l=>React.createElement('button',{
@@ -348,78 +399,6 @@
             : React.createElement('span',{className:'pill'}, t.completed?'DONE':'NEW'),
           React.createElement('button',{className:'iconbtn danger',onClick:()=>onDelete(t)},'Delete')
         ))
-      );
-    }
-
-    /* ===== App (logic unchanged) ===== */
-    function App(){
-      const [user,setUser]=useState(null);
-      const [lists,setLists]=useState([]);
-      const [active,setActive]=useState(null);
-      const [tasks,setTasks]=useState([]);
-
-      useEffect(()=>onAuthStateChanged(auth,u=>{setUser(u)}),[]);
-
-      useEffect(()=>{
-        if(user){
-          const unsub=onSnapshot(collection(db,'users',user.uid,'lists'),snap=>{
-            const data=snap.docs.map(d=>({id:d.id,...d.data()}));
-            setLists(data);
-            if(!active && data.length) setActive(data[0].id);
-          });
-          return unsub;
-        } else {
-          setLists([]); setActive(null); setTasks([]);
-        }
-      },[user]);
-
-      useEffect(()=>{
-        if(user && active){
-          const q=query(collection(db,'users',user.uid,'lists',active,'tasks'),orderBy('createdAt','desc'));
-          const unsub=onSnapshot(q,snap=>setTasks(snap.docs.map(d=>({id:d.id,...d.data()}))));
-          return unsub;
-        } else {
-          setTasks([]);
-        }
-      },[user,active]);
-
-      const provider=new GoogleAuthProvider();
-      const signIn=()=>{ ensureAudio(); signInWithPopup(auth,provider).catch(e=>alert('Sign-in error: '+e.message)); };
-      const signOutNow=()=>signOut(auth);
-
-      const addList=async()=>{
-        const name=prompt('লিস্টের নাম দিন'); if(!name || !user) return;
-        await addDoc(collection(db,'users',user.uid,'lists'),{name});
-      };
-      const addTask=async({title,delayMs})=>{
-        if(!(user&&active)) return;
-        const data={ title, completed:false, createdAt:serverTimestamp() };
-        if(delayMs!=null){ data.reminderAt=new Date(Date.now()+delayMs).toISOString(); }
-        await addDoc(collection(db,'users',user.uid,'lists',active,'tasks'),data);
-        if(delayMs!=null) scheduleLocalReminder(title,delayMs);
-      };
-      const toggleTask=async(task)=>{
-        await updateDoc(doc(db,'users',user.uid,'lists',active,'tasks',task.id),{completed:!task.completed});
-      };
-      const deleteTask=async(task)=>{
-        await deleteDoc(doc(db,'users',user.uid,'lists',active,'tasks',task.id));
-      };
-
-      return React.createElement('div',{className:'wrap'},
-        React.createElement(Header,{user,onSignIn:signIn,onSignOut:signOutNow}),
-        React.createElement(TopBar,null),
-        user && React.createElement('div',{className:'card'},
-          React.createElement('div',{className:'auth-row'},
-            React.createElement('div',null, 'স্বাগতম'+ (user?.displayName? ', '+user.displayName : '')),
-            React.createElement('div',null,
-              React.createElement('span',{style:{color: 'var(--muted)',fontSize:'12px'}}, user?.email||'')
-            )
-          )
-        ),
-        user && React.createElement(Tabs,{lists,active,onSelect:setActive,onAdd:addList}),
-        user && active && React.createElement(AddTask,{onAdd:addTask}),
-        user && active && React.createElement(TaskList,{tasks,onToggle:toggleTask,onDelete:deleteTask}),
-        !user && React.createElement('div',{className:'card'}, 'সাইন-ইন করলে আপনার লিস্ট ও টাস্ক দেখা যাবে।')
       );
     }
 
