@@ -1,153 +1,165 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="bn">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>আমার দৈনন্দিন কাজের তালিকা</title>
-<style>
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background: linear-gradient(145deg,#0f0f0f,#1a1a1a);
-  color: #fff;
-  padding: 20px;
-}
-.container {
-  max-width: 600px;
-  margin: auto;
-}
-h1 {
-  font-size: 24px;
-  margin-bottom: 10px;
-}
-.section {
-  background: #141414;
-  border-radius: 12px;
-  padding: 20px;
-  margin-top: 15px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-}
-.list-tabs {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 15px;
-}
-.tab {
-  background: #222;
-  border-radius: 20px;
-  padding: 8px 14px;
-  cursor: pointer;
-  border: 1px solid #333;
-}
-.tab.active {
-  background: #007bff;
-}
-input, button, textarea {
-  padding: 8px;
-  border: none;
-  border-radius: 8px;
-  margin: 5px 0;
-}
-input[type="text"] {
-  width: 100%;
-  background: #222;
-  color: #fff;
-}
-button {
-  background: #007bff;
-  color: #fff;
-  cursor: pointer;
-}
-button:hover {
-  background: #0056b3;
-}
-.task {
-  background: #1f1f1f;
-  padding: 10px;
-  border-radius: 8px;
-  margin: 5px 0;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  cursor: grab;
-}
-.task.dragging {
-  opacity: 0.5;
-}
-.reminder {
-  display: flex;
-  gap: 5px;
-}
-.reminder input {
-  width: 60px;
-  text-align: center;
-}
-.completed {
-  text-decoration: line-through;
-  opacity: 0.6;
-}
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>📝 আমার দৈনন্দিন কাজের তালিকা</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:#111; --card:#1a1a1a; --text:#fff; --border:#333; 
+      --accent:#60a5fa; --purple:#9333ea; --green:#16a34a; --red:#e11d48; --blue:#2563eb;
+    }
+    * { box-sizing:border-box; }
+    body { font-family:"Noto Sans Bengali",sans-serif; margin:0; background:var(--bg); color:var(--text); }
+    .container { max-width:960px; margin:auto; padding:20px; }
+    .card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:14px; margin-bottom:14px; box-shadow:0 2px 5px rgba(0,0,0,0.25); color:var(--text); }
+    .header-box { background:var(--green); color:#fff; padding:20px; border-radius:12px; text-align:center; margin-bottom:14px; box-shadow:0 4px 10px rgba(0,0,0,0.6),0 0 10px rgba(255,255,255,0.08); }
+    .header-box h2 { margin:0; font-size:22px; }
+    .header-box p { margin:5px 0 0 0; font-size:14px; opacity:0.9; }
+    .top-bar { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+    .clock-box { padding:8px 12px; border-radius:10px; background:var(--purple); color:#fff; font-weight:700; min-width:150px; text-align:center; box-shadow:0 4px 12px rgba(147,51,234,0.35); letter-spacing:0.5px; }
+    button { cursor:pointer; margin-left:5px; padding:8px 12px; border-radius:8px; border:1px solid var(--border); background:var(--card); color:#fff; font-weight:600; }
+    button:hover { opacity:0.9; }
+    .list-tabs { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; }
+    .list-tab { padding:8px 12px; border-radius:8px; border:1px solid var(--border); background:var(--card); cursor:pointer; color:#fff; transition:all .15s ease; }
+    .list-tab.active { color:#fff; border-color:transparent; }
+    .list-tab:nth-child(1).active { background:var(--blue); }
+    .list-tab:nth-child(2).active { background:var(--green); }
+    .list-tab:nth-child(3).active { background:var(--red); }
+    .list-tab:nth-child(4).active { background:var(--purple); }
+    input[type="text"], input[type="number"] { padding:10px 12px; border:1px solid var(--border); border-radius:8px; outline:none; width:70%; background:var(--bg); color:var(--text); }
+    input::placeholder{ color:#aaa; }
+    input:focus { border-color:var(--accent); }
+    .task-box { display:flex; align-items:center; justify-content:space-between; padding:10px; border:1px solid var(--border); border-radius:10px; margin-bottom:10px; background:var(--card); }
+    .task-title { margin-left:6px; flex-grow:1; }
+    .task-title.completed { text-decoration:line-through; opacity:0.7; }
+    .task-date { font-size:12px; color:#bbb; margin-left:30px; }
+    .reminder-row { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:10px; }
+    .reminder-chip { padding:6px 10px; border:1px solid var(--border); border-radius:8px; background:var(--card); }
+    .reminder-input { width:90px; }
+    .reminder-note { font-size:12px; opacity:0.8; }
+    .muted { opacity:0.6; }
+  </style>
 </head>
 <body>
+  <div id="root"></div>
+  <script type="module">
+import React,{useEffect,useState} from 'https://esm.sh/react@18.3.1';
+import { createRoot } from 'https://esm.sh/react-dom@18.3.1/client';
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth,onAuthStateChanged,GoogleAuthProvider,signInWithPopup,signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore,collection,addDoc,doc,deleteDoc,updateDoc,onSnapshot,query,orderBy,serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-<div class="container">
-  <h1>আমার দৈনন্দিন কাজের তালিকা</h1>
-  <div class="section">
-    <p><b>আজকের লক্ষ্য:</b> কাজ যোগ করুন, রিমাইন্ডার সেট করুন, সম্পন্ন করুন — সবকিছু এক জায়গায়।</p>
-    <p>স্বাগতম, Monirul Hasan</p>
-    <div class="list-tabs">
-      <div class="tab active">Minha my life</div>
-      <div class="tab">my 2nd work</div>
-      <div class="tab">+ নতুন</div>
-    </div>
-    <input type="text" id="taskInput" placeholder="কাজ যোগ করুন...">
-    <div class="reminder">
-      <input type="number" id="remHour" placeholder="ঘন্টা">
-      <input type="number" id="remMinute" placeholder="মিনিট">
-    </div>
-    <textarea id="taskNotes" placeholder="নোটস"></textarea>
-    <button onclick="addTask()">Add</button>
-    <div id="taskList"></div>
-  </div>
-</div>
+// 🔹 Firebase Config
+const firebaseConfig = {
+  apiKey: "AIzaSyAyZE7srt9ODVr4umkqqzn7mmgCURM4vLA",
+  authDomain: "to-do-list-fdcf2.firebaseapp.com",
+  databaseURL: "https://to-do-list-fdcf2-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "to-do-list-fdcf2",
+  storageBucket: "to-do-list-fdcf2.appspot.com",
+  messagingSenderId: "851462607587",
+  appId: "1:851462607587:web:3b82f5fe257a0b60b22bd6",
+  measurementId: "G-P8K1QBKMX6"
+};
+const app=initializeApp(firebaseConfig);
+const auth=getAuth(app);
+const db=getFirestore(app);
 
-<script>
-let taskList = document.getElementById("taskList");
+// 🔔 Audio Tone
+let audioCtx=null;
+function ensureAudio(){ if(!audioCtx){ audioCtx = new (window.AudioContext||window.webkitAudioContext)(); window.addEventListener('pointerdown',()=>{ if(audioCtx.state==='suspended') audioCtx.resume(); },{once:true}); } }
+function playReminderTone(){ ensureAudio(); if(!audioCtx) return; const ctx=audioCtx; const now=ctx.currentTime; const gain=ctx.createGain(); gain.gain.setValueAtTime(0.0001, now); gain.connect(ctx.destination); [[523.25,0.2],[659.25,0.18],[783.99,0.22],[1046.50,0.3]].forEach((n,i)=>{ const osc=ctx.createOscillator(); osc.type='sine'; osc.frequency.setValueAtTime(n[0], now+i*0.2); osc.connect(gain); gain.gain.exponentialRampToValueAtTime(0.4, now+0.02); gain.gain.exponentialRampToValueAtTime(0.001, now+n[1]); osc.start(now); osc.stop(now+n[1]+0.02); }); }
 
-function addTask() {
-  let text = document.getElementById("taskInput").value.trim();
-  if (!text) return;
-  let task = document.createElement("div");
-  task.className = "task";
-  task.draggable = true;
-  task.innerHTML = `
-    <input type="checkbox" onchange="toggleComplete(this)">
-    <span>${text}</span>
-    <button onclick="this.parentElement.remove()">×</button>
-  `;
-  task.addEventListener("dragstart", () => task.classList.add("dragging"));
-  task.addEventListener("dragend", () => task.classList.remove("dragging"));
-  taskList.appendChild(task);
-  document.getElementById("taskInput").value = "";
+// 🔘 Components
+function Header({user,onSignIn,onSignOut}){
+  return React.createElement('div',null,
+    React.createElement('div',{className:'header-box'},
+      React.createElement('h2',null,"📝 আমার দৈনন্দিন কাজের তালিকা"),
+      React.createElement('p',null,"talha.io")
+    ),
+    user?React.createElement('div',{className:'card'},
+      React.createElement('span',null,"👋 "+user.displayName),
+      React.createElement('button',{onClick:onSignOut},'Sign Out')
+    ):React.createElement('div',{className:'card'},
+      React.createElement('button',{onClick:onSignIn},'Google দিয়ে সাইন ইন')
+    )
+  );
 }
 
-function toggleComplete(checkbox) {
-  checkbox.parentElement.classList.toggle("completed", checkbox.checked);
+function DigitalClock(){
+  const [now,setNow]=useState(new Date());
+  useEffect(()=>{ const t=setInterval(()=>setNow(new Date()),1000); return ()=>clearInterval(t); },[]);
+  const timeStr=new Intl.DateTimeFormat('bn-BD',{ hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:true }).format(now);
+  return React.createElement('div',{className:'clock-box'}, timeStr);
 }
 
-taskList.addEventListener("dragover", e => {
-  e.preventDefault();
-  const dragging = document.querySelector(".dragging");
-  const afterElement = [...taskList.querySelectorAll(".task:not(.dragging)")]
-    .find(el => e.clientY < el.getBoundingClientRect().top + el.offsetHeight / 2);
-  if (afterElement) {
-    taskList.insertBefore(dragging, afterElement);
-  } else {
-    taskList.appendChild(dragging);
-  }
-});
-</script>
+function TopBar(){ return React.createElement('div',{className:'top-bar'}, React.createElement(DigitalClock,null)); }
 
+function ListTabs({lists,active,onSelect,onAdd}){
+  return React.createElement('div',{className:'list-tabs'},
+    lists.map((l)=>React.createElement('button',{key:l.id,className:'list-tab '+(active===l.id?'active':''),onClick:()=>onSelect(l.id)},l.name)),
+    React.createElement('button',{className:'list-tab',onClick:onAdd},'+ লিস্ট')
+  );
+}
+
+function AddTaskForm({onAdd}){
+  const [title,setTitle]=useState(''); const [rem,setRem]=useState(false);
+  const [hrs,setHrs]=useState(''); const [mins,setMins]=useState(''); const [secs,setSecs]=useState('');
+  const submit=e=>{ e.preventDefault(); const t=title.trim(); if(!t) return; let delay=null; if(rem){ const h=parseInt(hrs||'0',10), m=parseInt(mins||'0',10), s=parseInt(secs||'0',10); delay=(h*3600+m*60+s)*1000; if(delay<=0) delay=null; } onAdd({title:t,delayMs:delay}); setTitle(''); setHrs(''); setMins(''); setSecs(''); setRem(false); };
+  return React.createElement('form',{onSubmit:submit,className:'card'},
+    React.createElement('input',{type:'text',value:title,onChange:e=>setTitle(e.target.value),placeholder:'কাজ যোগ করুন…'}),
+    React.createElement('button',{type:'submit'},'➕ Add'),
+    React.createElement('div',{className:'reminder-row'},
+      React.createElement('label',{className:'reminder-chip'},
+        React.createElement('input',{type:'checkbox',checked:rem,onChange:e=>setRem(e.target.checked)}),' রিমাইন্ডার দেব?'
+      ),
+      React.createElement('input',{className:'reminder-input',type:'number',min:'0',placeholder:'ঘন্টা',value:hrs,onChange:e=>setHrs(e.target.value),disabled:!rem}),
+      React.createElement('input',{className:'reminder-input',type:'number',min:'0',placeholder:'মিনিট',value:mins,onChange:e=>setMins(e.target.value),disabled:!rem}),
+      React.createElement('input',{className:'reminder-input',type:'number',min:'0',placeholder:'সেকেন্ড',value:secs,onChange:e=>setSecs(e.target.value),disabled:!rem}),
+      React.createElement('span',{className:'reminder-note '+(!rem?'muted':'' )}, rem ? 'সময় দিলে নির্দিষ্ট সময়ে নোটিফিকেশন ও সাউন্ড বাজবে' : 'রিমাইন্ডার না চাইলে টিক দিবে না')
+    )
+  );
+}
+
+function TaskList({tasks,onToggle,onDelete}){
+  const fmt=ts=>ts?new Intl.DateTimeFormat('bn-BD',{dateStyle:'full'}).format(ts.toDate()):'';
+  return React.createElement('div',{className:'card'}, tasks.length?tasks.map(t=>React.createElement('div',{key:t.id,className:'task-box'},
+    React.createElement('input',{type:'checkbox',checked:t.completed,onChange:()=>onToggle(t)}),
+    React.createElement('span',{className:'task-title '+(t.completed?'completed':'' )},t.completed?"✅ "+t.title:t.title),
+    React.createElement('div',{className:'task-date'}, fmt(t.createdAt), t.reminderAt?' • 🔔':'' ),
+    React.createElement('button',{onClick:()=>onDelete(t)},'❌')
+  )):'কোনো কাজ নেই');
+}
+
+// 🔔 Notification + Reminder
+function scheduleLocalReminder(title,delayMs){ if(delayMs==null) return; const trigger=()=>{ playReminderTone(); if('Notification' in window){ if(Notification.permission!=='granted'){ Notification.requestPermission().then(p=>{ if(p==='granted') new Notification('🔔 রিমাইন্ডার',{body:'মনে কর: '+title}); }); }else{ new Notification('🔔 রিমাইন্ডার',{body:'মনে কর: '+title}); } } }; setTimeout(trigger,delayMs); }
+
+// 🚀 App
+function App(){
+  const [user,setUser]=useState(null); const [lists,setLists]=useState([]); const [activeList,setActiveList]=useState(null); const [tasks,setTasks]=useState([]);
+  useEffect(()=>onAuthStateChanged(auth,u=>setUser(u)),[]);
+  useEffect(()=>{ if(user){ const unsub=onSnapshot(collection(db,'users',user.uid,'lists'),snap=>{ const data=snap.docs.map(d=>({id:d.id,...d.data()})); setLists(data); if(!activeList && data.length) setActiveList(data[0].id); }); return unsub; } },[user]);
+  useEffect(()=>{ if(user&&activeList){ const q=query(collection(db,'users',user.uid,'lists',activeList,'tasks'),orderBy('createdAt','desc')); const unsub=onSnapshot(q,snap=>setTasks(snap.docs.map(d=>({id:d.id,...d.data()})))); return unsub; } },[user,activeList]);
+
+  const provider=new GoogleAuthProvider(); const signIn=()=>{ ensureAudio(); signInWithPopup(auth,provider).catch(err=>alert("Sign-in error:"+err.message)); };
+  const signOutNow=()=>signOut(auth);
+
+  const addList=async()=>{ const name=prompt('লিস্ট নাম দিন'); if(name&&user) await addDoc(collection(db,'users',user.uid,'lists'),{name}); };
+  const addTask=async({title,delayMs})=>{ if(user&&activeList){ const data={title,completed:false,createdAt:serverTimestamp()}; if(delayMs!=null) data.reminderAt=new Date(Date.now()+delayMs).toISOString(); await addDoc(collection(db,'users',user.uid,'lists',activeList,'tasks'),data); if(delayMs!=null) scheduleLocalReminder(title,delayMs); } };
+  const toggleTask=async(task)=>await updateDoc(doc(db,'users',user.uid,'lists',activeList,'tasks',task.id),{completed:!task.completed});
+  const deleteTask=async(task)=>await deleteDoc(doc(db,'users',user.uid,'lists',activeList,'tasks',task.id));
+
+  return React.createElement('div',{className:'container'},
+    React.createElement(Header,{user,onSignIn:signIn,onSignOut:signOutNow}),
+    React.createElement(TopBar,null),
+    user && React.createElement(ListTabs,{lists,active:activeList,onSelect:setActiveList,onAdd:addList}),
+    user && activeList && React.createElement(AddTaskForm,{onAdd:addTask}),
+    user && activeList && React.createElement(TaskList,{tasks,onToggle:toggleTask,onDelete:deleteTask})
+  );
+}
+
+createRoot(document.getElementById('root')).render(React.createElement(App));
+  </script>
 </body>
 </html>
-
