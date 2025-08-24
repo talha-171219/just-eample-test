@@ -36,7 +36,7 @@
     .task-input {
       display: flex;
       gap: 10px;
-      margin-bottom: 20px;
+      margin-bottom: 15px;
     }
     .task-input input[type="text"] {
       flex: 1;
@@ -57,18 +57,19 @@
     }
     .reminder-inputs {
       display: flex;
-      gap: 8px;
+      gap: 6px;
       margin-top: 10px;
       justify-content: center;
     }
     .reminder-inputs input {
-      width: 60px;
-      padding: 6px;
+      width: 50px;
+      padding: 5px;
       border-radius: 6px;
       border: none;
       background: #2c2c2c;
       color: #fff;
       text-align: center;
+      font-size: 13px;
     }
     ul {
       list-style: none;
@@ -85,8 +86,9 @@
       cursor: grab;
     }
     li span {
-      font-size: 14px;
+      font-size: 13px;
       color: #bbb;
+      margin-left: 8px;
     }
     .delete-btn {
       background: #e63946;
@@ -140,10 +142,13 @@
       const li = document.createElement("li");
       li.draggable = true;
 
+      const taskTitle = document.createElement("strong");
+      taskTitle.textContent = taskText;
+
       const span = document.createElement("span");
       span.textContent = formatDate();
 
-      li.innerHTML = `<strong>${taskText}</strong>`;
+      li.appendChild(taskTitle);
       li.appendChild(span);
 
       const delBtn = document.createElement("button");
