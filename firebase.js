@@ -1,14 +1,13 @@
 // firebase.js
-import { initializeApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider } from "firebase/auth";
-import { getFirestore, serverTimestamp } from "firebase/firestore";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+import { getAuth, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+import { getFirestore, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
-// Use your provided config
 const firebaseConfig = {
   apiKey: "AIzaSyB2PcLHyYtR-dOMUgKnqKF4dKTrUZRjf-I",
   authDomain: "chat-bot-ai-cc7cf.firebaseapp.com",
   projectId: "chat-bot-ai-cc7cf",
-  storageBucket: "chat-bot-ai-cc7cf.appspot.com",
+  storageBucket: "chat-bot-ai-cc7cf.firebasestorage.app",
   messagingSenderId: "949908800966",
   appId: "1:949908800966:web:61d644a9c66e01bf6e1ec7"
 };
