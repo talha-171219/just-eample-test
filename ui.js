@@ -1,7 +1,7 @@
 // ui.js
 import { auth } from "./firebase.js";
 import {
-  listenUsers as listUsersRealtime,
+  listenUsers,
   getOrCreateConversation,
   listenMessages as streamMessages,
   sendMessage,
