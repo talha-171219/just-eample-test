@@ -1,8 +1,14 @@
 // ui.js
 import { auth } from "./firebase.js";
 import {
-  listUsersRealtime, getOrCreateConversation, streamMessages,
-  sendMessage, toggleReaction, markRead, getUser
+  listenUsers as listUsersRealtime,
+  getOrCreateConversation,
+  listenMessages as streamMessages,
+  sendMessage,
+  reactMessage as toggleReaction,
+  markAsRead as markRead,
+  REACTIONS,
+  getUser
 } from "./store.js";
 
 const $ = (q) => document.querySelector(q);
