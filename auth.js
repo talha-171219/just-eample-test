@@ -23,11 +23,14 @@ onAuthStateChanged(auth, async (user) => {
     const ref = doc(db, "users", user.uid);
     const snap = await getDoc(ref);
     if (!snap.exists()) {
-      await setDoc(ref, {
-        uid: user.uid,
-        email: user.email,
-        createdAt: ts()
-      });
+     await setDoc(ref, {
+  uid: user.uid,
+  email: user.email,
+  displayName: user.displayName || "",
+  photoURL: user.photoURL || "",
+  createdAt: ts()
+});
+
     }
   }
 });
