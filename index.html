@@ -1,343 +1,98 @@
 <!doctype html>
 <html lang="bn">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Chat Web App</title>
-  <style>
-    :root{
-      --bg:#0f1020;
-      --surface:#14152a;
-      --surface-2:#1a1c33;
-      --primary:#7c4dff;        /* থিম কালার বদলাতে এটা পাল্টাও */
-      --primary-2:#9f7bff;
-      --text:#e8eaf6;
-      --muted:#a7abc8;
-      --accent:#22c55e;
-      --border:rgba(255,255,255,.08);
-      --shadow:0 10px 25px rgba(0,0,0,.35);
-      --radius:14px;
-    }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0;
-      font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial,sans-serif;
-      color:var(--text);
-      background:radial-gradient(1200px 800px at 110% -10%, rgba(124,77,255,.25), transparent 60%),
-                 radial-gradient(900px 600px at -10% 110%, rgba(159,123,255,.20), transparent 55%),
-                 var(--bg);
-      overflow:hidden;
-    }
-    .app{
-      display:grid;
-      grid-template-columns: 300px 1fr;
-      gap:16px;
-      height:100vh;
-      padding:16px;
-    }
-    .panel{
-      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.02));
-      border:1px solid var(--border);
-      border-radius:var(--radius);
-      box-shadow:var(--shadow);
-      overflow:hidden;
-      backdrop-filter: blur(8px);
-    }
-    /* Sidebar */
-    .sidebar{
-      display:flex;
-      flex-direction:column;
-      min-width:260px;
-    }
-    .side-head{
-      padding:16px 16px 12px;
-      border-bottom:1px solid var(--border);
-      background:linear-gradient(135deg, rgba(124,77,255,.18), rgba(124,77,255,0) 60%);
-      display:flex;align-items:center;gap:10px;justify-content:space-between;
-    }
-    .brand{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:.2px}
-    .badge{
-      font-size:12px;color:#0b1220;background:#c7d2fe;border-radius:999px;padding:4px 8px;font-weight:700;
-    }
-    .search{
-      padding:12px 16px;border-bottom:1px solid var(--border);
-    }
-    .search input{
-      width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--border);
-      background:var(--surface-2);color:var(--text);outline:none;
-    }
-    .chat-list{
-      overflow:auto;scrollbar-width:thin;scrollbar-color: var(--primary) transparent;
-    }
-    .item{
-      display:grid;grid-template-columns:40px 1fr auto;gap:12px;
-      padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer;
-      align-items:center;
-    }
-    .item:hover{background:rgba(255,255,255,.03)}
-    .avatar{
-      width:40px;height:40px;border-radius:50%;
-      background:linear-gradient(135deg, var(--primary), var(--primary-2));
-      display:grid;place-items:center;font-weight:800;color:white;
-      box-shadow:0 4px 14px rgba(124,77,255,.4);
-    }
-    .meta .name{font-weight:700}
-    .meta .last{color:var(--muted);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px}
-    .pill{
-      background:rgba(124,77,255,.18);color:#cbbdff;border:1px solid rgba(124,77,255,.35);
-      font-size:12px;padding:4px 8px;border-radius:999px;font-weight:700
-    }
-    /* Chat area */
-    .chat{
-      display:grid;grid-template-rows:auto 1fr auto;
-    }
-    .topbar{
-      display:flex;justify-content:space-between;align-items:center;
-      padding:14px 16px;border-bottom:1px solid var(--border);
-      background:linear-gradient(135deg, rgba(124,77,255,.16), rgba(124,77,255,0) 60%);
-    }
-    .peer{display:flex;align-items:center;gap:12px}
-    .peer .title{font-weight:800}
-    .status{font-size:12px;color:var(--muted)}
-    .actions{display:flex;gap:8px}
-    .btn{
-      border:1px solid var(--border);background:var(--surface-2);color:var(--text);
-      padding:8px 10px;border-radius:10px;cursor:pointer
-    }
-    .btn:hover{border-color:rgba(255,255,255,.18)}
-    .messages{
-      padding:18px;overflow:auto;scroll-behavior:smooth;
-      background:
-        radial-gradient(700px 500px at 80% -10%, rgba(124,77,255,.10), transparent 60%),
-        linear-gradient(180deg, rgba(255,255,255,.02), transparent 120px);
-    }
-    .day{
-      text-align:center;color:var(--muted);font-size:12px;margin:10px 0 18px
-    }
-    .msg{
-      display:flex;gap:10px;max-width:70%;margin:8px 0;
-    }
-    .msg.them{flex-direction:row}
-    .msg.me{flex-direction:row-reverse;margin-left:auto}
-    .bubble{
-      padding:12px 14px;border-radius:14px;border:1px solid var(--border);
-      background:var(--surface-2);box-shadow:0 6px 18px rgba(0,0,0,.25);
-    }
-    .msg.me .bubble{
-      background:linear-gradient(135deg, var(--primary), var(--primary-2));
-      border-color:rgba(255,255,255,.18)
-    }
-    .text{white-space:pre-wrap}
-    .time{font-size:11px;color:var(--muted);margin-top:6px}
-    .composer{
-      display:flex;gap:10px;align-items:center;padding:10px;border-top:1px solid var(--border);
-      background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,0));
-    }
-    .input{
-      display:flex;align-items:center;gap:8px;background:var(--surface-2);
-      border:1px solid var(--border);border-radius:12px;padding:10px 12px;flex:1
-    }
-    .input input{
-      flex:1;border:none;outline:none;background:transparent;color:var(--text);
-      font-size:15px;
-    }
-    .send{
-      background:linear-gradient(135deg, var(--primary), var(--primary-2));
-      color:white;border:none;padding:10px 14px;border-radius:12px;cursor:pointer;font-weight:800;
-      box-shadow:0 8px 18px rgba(124,77,255,.35);
-    }
-    .send:disabled{opacity:.6;cursor:not-allowed;box-shadow:none}
-    /* Responsive */
-    @media (max-width: 980px){
-      .app{grid-template-columns: 1fr}
-      .sidebar{display:none}
-    }
-  </style>
-</head>
-<body>
-  <div class="app">
-    <!-- Sidebar -->
-    <aside class="panel sidebar">
-      <div class="side-head">
-        <div class="brand">
-          <div class="avatar">C</div>
-          <div>Chats</div>
-        </div>
-        <div class="badge">12 new</div>
-      </div>
-      <div class="search"><input placeholder="Search chats…" /></div>
-      <div class="chat-list" id="chatList">
-        <div class="item">
-          <div class="avatar">A</div>
-          <div class="meta">
-            <div class="name">Arif</div>
-            <div class="last">Kalke meetup, 6 PM ok?</div>
-          </div>
-          <div class="pill">3</div>
-        </div>
-        <div class="item">
-          <div class="avatar">S</div>
-          <div class="meta">
-            <div class="name">Support</div>
-            <div class="last">Ticket resolved. Anything else?</div>
-          </div>
-          <div class="pill" style="visibility:hidden;">0</div>
-        </div>
-        <div class="item">
-          <div class="avatar">M</div>
-          <div class="meta">
-            <div class="name">Monirul</div>
-            <div class="last">Send the UI preview pls.</div>
-          </div>
-          <div class="pill">1</div>
-        </div>
-      </div>
-    </aside>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Glassy Chat</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <!-- Background -->
+    <div class="bg"></div>
 
-    <!-- Chat -->
-    <section class="panel chat">
-      <div class="topbar">
-        <div class="peer">
-          <div class="avatar" style="width:36px;height:36px">M</div>
-          <div>
-            <div class="title">Monirul</div>
-            <div class="status">typing…</div>
+    <!-- Safety Password Gate -->
+    <div id="password-gate" class="modal show">
+      <div class="modal-card">
+        <h2>Enter Safety Password</h2>
+        <p>Access requires a passcode.</p>
+        <input id="pass-input" type="password" placeholder="Enter password" />
+        <button id="pass-submit">Continue</button>
+        <div class="hint">Hint: 4 digits</div>
+        <div id="pass-error" class="error"></div>
+      </div>
+    </div>
+
+    <!-- Auth Gate -->
+    <div id="auth-gate" class="modal">
+      <div class="modal-card">
+        <h2>Sign in with Google</h2>
+        <p>Please sign in to start chatting.</p>
+        <button id="google-signin" class="google-btn">
+          <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt=""> Continue with Google
+        </button>
+        <div id="auth-error" class="error"></div>
+      </div>
+    </div>
+
+    <!-- First-time Display Name Modal -->
+    <div id="name-modal" class="modal">
+      <div class="modal-card">
+        <h2>Choose your display name</h2>
+        <input id="name-input" type="text" maxlength="40" placeholder="e.g., Monirul" />
+        <button id="name-save">Save</button>
+        <div id="name-error" class="error"></div>
+      </div>
+    </div>
+
+    <!-- App Shell -->
+    <div id="app" class="app hidden">
+      <aside class="sidebar">
+        <div class="brand">Glassy Chat</div>
+        <div class="me">
+          <img id="me-avatar" class="avatar" alt="">
+          <div class="me-info">
+            <div id="me-name" class="me-name">...</div>
+            <div id="me-email" class="me-email">...</div>
           </div>
         </div>
-        <div class="actions">
-          <button class="btn" id="clearBtn">Clear</button>
-          <button class="btn" id="themeBtn">Theme</button>
+        <div class="section-title">People</div>
+        <div id="people-list" class="people-list"></div>
+        <div class="sidebar-footer">
+          <button id="theme-toggle" class="pill">Toggle theme</button>
+          <button id="signout" class="pill">Sign out</button>
         </div>
-      </div>
+      </aside>
 
-      <div class="messages" id="messages">
-        <div class="day">Today</div>
-        <div class="msg them">
-          <div class="avatar" style="width:32px;height:32px">M</div>
-          <div>
-            <div class="bubble">
-              <div class="text">Ei UI ta dekhte pachcho? Er moto banate parba?</div>
-              <div class="time">10:21</div>
+      <main class="chat">
+        <header class="chat-header">
+          <div class="peer">
+            <img id="peer-avatar" class="avatar" alt="">
+            <div class="peer-info">
+              <div id="peer-name" class="peer-name">Select someone to chat</div>
+              <div id="peer-status" class="peer-status">...</div>
             </div>
           </div>
-        </div>
-        <div class="msg me">
-          <div class="avatar" style="width:32px;height:32px">Y</div>
-          <div>
-            <div class="bubble">
-              <div class="text">Absolutely. Purple theme + rounded bubbles diye clean layout kore dicchi.</div>
-              <div class="time">10:22</div>
-            </div>
+        </header>
+
+        <section id="messages" class="messages"></section>
+
+        <footer class="composer">
+          <div id="reply-preview" class="reply hidden">
+            <div class="rp-left">Replying to <span id="rp-name"></span></div>
+            <div id="rp-text" class="rp-text"></div>
+            <button id="rp-cancel" class="rp-cancel">✕</button>
           </div>
-        </div>
-      </div>
-
-      <form class="composer" id="composer">
-        <div class="input">
-          <input id="input" autocomplete="off" placeholder="Type a message…" />
-        </div>
-        <button class="send" id="sendBtn" type="submit">Send ⏎</button>
-      </form>
-    </section>
-  </div>
-
-  <script>
-    const messagesEl = document.getElementById('messages');
-    const inputEl = document.getElementById('input');
-    const formEl = document.getElementById('composer');
-    const sendBtn = document.getElementById('sendBtn');
-    const clearBtn = document.getElementById('clearBtn');
-    const themeBtn = document.getElementById('themeBtn');
-
-    // Helper: time string
-    function timeNow(){
-      const d = new Date();
-      const hh = String(d.getHours()).padStart(2,'0');
-      const mm = String(d.getMinutes()).padStart(2,'0');
-      return `${hh}:${mm}`;
-    }
-
-    // Append message
-    function appendMessage({who='me', text='', time=timeNow()}){
-      const wrap = document.createElement('div');
-      wrap.className = `msg ${who}`;
-      wrap.innerHTML = `
-        <div class="avatar" style="width:32px;height:32px">${who==='me'?'Y':'M'}</div>
-        <div>
-          <div class="bubble">
-            <div class="text"></div>
-            <div class="time">${time}</div>
+          <textarea id="input" rows="1" placeholder="Type a message"></textarea>
+          <div class="actions">
+            <button id="send" title="Enter to send">Send ➤</button>
           </div>
-        </div>
-      `;
-      wrap.querySelector('.text').textContent = text;
-      messagesEl.appendChild(wrap);
-      messagesEl.scrollTop = messagesEl.scrollHeight;
-    }
+        </footer>
+      </main>
+    </div>
 
-    // Fake typing indicator + bot reply
-    let typingTimer;
-    function botReply(userText){
-      const status = document.querySelector('.status');
-      status.textContent = 'typing…';
-      clearTimeout(typingTimer);
-      typingTimer = setTimeout(()=>{
-        status.textContent = 'online';
-        const reply = smartEcho(userText);
-        appendMessage({who:'them', text: reply});
-      }, 700);
-    }
-
-    function smartEcho(t){
-      // Simple canned reply for demo
-      const lower = t.trim().toLowerCase();
-      if(!lower) return "🙂";
-      if(lower.includes('hi') || lower.includes('hello')) return "Hello! UI preview ta kemon laglo?";
-      if(lower.includes('color') || lower.includes('theme')) return "Primary color --primary variable theke instantly change kora jay.";
-      if(lower.includes('responsive')) return "Yes, sidebar small screen e hide hoye jay. Grid -> single column.";
-      return "Got it! Ar kichu tweak chai le bolo.";
-    }
-
-    // Send handler
-    formEl.addEventListener('submit', (e)=>{
-      e.preventDefault();
-      const text = inputEl.value.trim();
-      if(!text) return;
-      sendBtn.disabled = true;
-      appendMessage({who:'me', text});
-      inputEl.value = '';
-      setTimeout(()=>{ sendBtn.disabled=false; }, 200);
-      botReply(text);
-    });
-
-    // Clear chat
-    clearBtn.addEventListener('click', ()=>{
-      messagesEl.innerHTML = '<div class="day">Today</div>';
-    });
-
-    // Theme cycle
-    const themes = [
-      ['#7c4dff','#9f7bff'],   // Purple
-      ['#06b6d4','#60a5fa'],   // Teal/Blue
-      ['#22c55e','#84cc16'],   // Green/Lime
-      ['#ef4444','#f59e0b']    // Red/Amber
-    ];
-    let tIndex = 0;
-    themeBtn.addEventListener('click', ()=>{
-      tIndex = (tIndex+1) % themes.length;
-      const [p,p2] = themes[tIndex];
-      document.documentElement.style.setProperty('--primary', p);
-      document.documentElement.style.setProperty('--primary-2', p2);
-    });
-
-    // Enter to send on desktop
-    inputEl.addEventListener('keydown', (e)=>{
-      if(e.key === 'Enter' && !e.shiftKey){
-        e.preventDefault();
-        sendBtn.click();
-      }
-    });
-  </script>
-</body>
+    <script type="module" src="./firebase.js"></script>
+    <script type="module" src="./auth.js"></script>
+    <script type="module" src="./store.js"></script>
+    <script type="module" src="./ui.js"></script>
+  </body>
 </html>
