@@ -97,7 +97,7 @@ function autoResize() {
 
 function loadPeople() {
   if (peersUnsub) peersUnsub();
-  peersUnsub = listUsersRealtime(renderPeople);
+  peersUnsub = listUsersRealtime(renderPeople); // নোট: যদি এটা undefined হয়, listenUsers ব্যবহার করতে হবে
 }
 
 function renderPeople(list) {
@@ -105,7 +105,7 @@ function renderPeople(list) {
   if (list.length === 0) {
     const empty = document.createElement("div");
     empty.className = "person";
-    empty.innerHTML = <div>No other users yet</div>;
+    empty.innerHTML = `<div>No other users yet</div>`;
     peopleList.appendChild(empty);
     return;
   }
@@ -133,7 +133,6 @@ async function openChat(peer) {
   currentConvId = await getOrCreateConversation(peer.uid);
   if (msgsUnsub) msgsUnsub();
   msgsUnsub = streamMessages(currentConvId, renderMessages);
-  // slight delay to mark read after initial render
   setTimeout(() => markRead(currentConvId), 300);
 }
 
@@ -160,7 +159,7 @@ function renderMessages(msgs) {
       </div>` : "";
 
     el.innerHTML = `
-      <div class="react-bar">${REACTIONS.map(e => <span class="react-btn">${e}</span>).join("")}</div>
+      <div class="react-bar">${REACTIONS.map(e => `<span class="react-btn">${e}</span>`).join("")}</div>
       ${replyHtml}
       <div class="body">${linkify(escapeHtml(m.text || ""))}</div>
       <div class="meta">
@@ -194,7 +193,7 @@ function renderReacts(reactions) {
   const chips = [];
   for (const [emoji, uids] of Object.entries(reactions)) {
     if (!uids || uids.length === 0) continue;
-    chips.push(<span class="react-chip">${emoji} ${uids.length}</span>);
+    chips.push(`<span class="react-chip">${emoji} ${uids.length}</span>`);
   }
   return chips.join("");
 }
@@ -205,7 +204,7 @@ function scrollToBottom() {
 
 function dayKey(d) {
   if (!d) return "unknown";
-  return ${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()};
+  return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
 }
 function labelForDay(key) {
   return key === dayKey(new Date()) ? "Today" : key;
@@ -220,5 +219,5 @@ function escapeHtml(s) {
 }
 function linkify(text) {
   const urlRegex = /(https?:\/\/[^\s]+)/g;
-  return text.replace(urlRegex, (url) => <a href="${url}" target="_blank" rel="noopener">${url}</a>);
+  return text.replace(urlRegex, (url) => `<a href="${url}" target="_blank" rel="noopener">${url}</a>`);
 }
