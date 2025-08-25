@@ -1,5 +1,5 @@
 // store.js
-import { db, ts } from "./firebase.js";
+import { db, ts, auth } from "./firebase.js";
 import {
   addDoc,
   collection,
@@ -17,10 +17,9 @@ import {
   increment
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
-// 1) এই লিস্ট অনুযায়ী UI-এ বাটন দেখাবে
+// --- Existing exports ---
 export const REACTIONS = ["😁", "😂", "😅", "😍", "😥", "😒", "😔", "😭"];
 
-// 2) নতুন মেসেজ যোগ করা
 export async function addMessage(userId, text) {
   await addDoc(collection(db, "messages"), {
     userId,
@@ -30,7 +29,6 @@ export async function addMessage(userId, text) {
   });
 }
 
-// 3) রিয়েলটাইমে মেসেজ লিসেন করা
 export function listenMessages(callback) {
   const q = query(
     collection(db, "messages"),
@@ -40,7 +38,6 @@ export function listenMessages(callback) {
   return onSnapshot(q, callback);
 }
 
-// 4) একটা মেসেজের উপর রিয়্যাকশন বাড়ানো
 export async function addReaction(messageId, emoji) {
   const msgRef = doc(db, "messages", messageId);
   await updateDoc(msgRef, {
@@ -48,7 +45,6 @@ export async function addReaction(messageId, emoji) {
   });
 }
 
-// 5) সিঙ্গেল মেসেজ ফেচ করা
 export async function getMessage(messageId) {
   const ref = doc(db, "messages", messageId);
   const snap = await getDoc(ref);
@@ -59,7 +55,6 @@ export async function getMessage(messageId) {
   }
 }
 
-// 6) কোনো কন্ডিশন দিয়ে মেসেজ ফেচ
 export async function queryMessages(field, op, value) {
   const q = query(
     collection(db, "messages"),
@@ -69,11 +64,8 @@ export async function queryMessages(field, op, value) {
   return snap.docs.map(d => ({ id: d.id, ...d.data() }));
 }
 
-/* ---------------------------------------
-   নিচের অংশ ui.js এর missing exports পূরণ করছে
---------------------------------------- */
+// --- NEW: Functions required by ui.js ---
 
-// ইউজার লিস্ট রিয়েলটাইম
 export function listUsersRealtime(callback) {
   const q = query(collection(db, "users"), orderBy("displayName", "asc"));
   return onSnapshot(q, snap => {
@@ -82,9 +74,8 @@ export function listUsersRealtime(callback) {
   });
 }
 
-// Conversation পাওয়া বা তৈরি করা
 export async function getOrCreateConversation(peerUid) {
-  const me = firebase.auth().currentUser?.uid;
+  const me = auth.currentUser?.uid;
   if (!me) throw new Error("Not logged in");
 
   const convQuery = query(
@@ -102,7 +93,6 @@ export async function getOrCreateConversation(peerUid) {
   return docRef.id;
 }
 
-// মেসেজ স্ট্রিম
 export function streamMessages(convId, callback) {
   const msgsRef = collection(db, "conversations", convId, "messages");
   const q = query(msgsRef, orderBy("createdAt", "asc"));
@@ -112,9 +102,8 @@ export function streamMessages(convId, callback) {
   });
 }
 
-// মেসেজ পাঠানো
 export async function sendMessage(convId, text, replyTo = null) {
-  const me = firebase.auth().currentUser?.uid;
+  const me = auth.currentUser?.uid;
   if (!me) throw new Error("Not logged in");
 
   const msgData = {
@@ -130,7 +119,6 @@ export async function sendMessage(convId, text, replyTo = null) {
   await addDoc(collection(db, "conversations", convId, "messages"), msgData);
 }
 
-// রিয়্যাকশন অন/অফ
 export async function toggleReaction(convId, msgId, emoji, userId) {
   const msgRef = doc(db, "conversations", convId, "messages", msgId);
   const snap = await getDoc(msgRef);
@@ -149,15 +137,13 @@ export async function toggleReaction(convId, msgId, emoji, userId) {
   await updateDoc(msgRef, { reactions });
 }
 
-// রিড মার্ক করা
 export async function markRead(convId) {
-  const me = firebase.auth().currentUser?.uid;
+  const me = auth.currentUser?.uid;
   if (!me) throw new Error("Not logged in");
   const convRef = doc(db, "conversations", convId);
   await updateDoc(convRef, { [`read.${me}`]: serverTimestamp() });
 }
 
-// ইউজার ফেচ করা
 export async function getUser(uid) {
   const userRef = doc(db, "users", uid);
   const snap = await getDoc(userRef);
