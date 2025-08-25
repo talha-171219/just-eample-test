@@ -31,3 +31,36 @@ onAuthStateChanged(auth, async (user) => {
     }
   }
 });
+// -----------------------------------
+// Password Gate Logic Start
+// -----------------------------------
+
+const passInput    = document.getElementById("pass-input");
+const passSubmit   = document.getElementById("pass-submit");
+const passError    = document.getElementById("pass-error");
+const passwordGate = document.getElementById("password-gate");
+const authGate     = document.getElementById("auth-gate");
+const CORRECT_PASS = "1234"; // এখানে আপনার নিরাপদ পাসওয়ার্ড দিন
+
+passSubmit.addEventListener("click", () => {
+  const entered = passInput.value.trim();
+  if (entered === CORRECT_PASS) {
+    passwordGate.classList.remove("show");
+    passwordGate.classList.add("hidden");
+    authGate.classList.add("show");
+  } else {
+    passError.textContent = "ভুল পাসওয়ার্ড, আবার চেষ্টা করুন।";
+  }
+});
+
+passInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    passSubmit.click();
+  }
+});
+
+// -----------------------------------
+// Password Gate Logic End
+// -----------------------------------
+
+
