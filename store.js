@@ -1,151 +1,138 @@
 // store.js
-import { db, ts, auth } from "./firebase.js";
+import { db, auth } from "./firebase.js";
 import {
-  addDoc,
   collection,
   doc,
+  addDoc,
   getDoc,
-  getDocs,
-  onSnapshot,
-  orderBy,
-  query,
-  serverTimestamp,
   setDoc,
   updateDoc,
+  deleteDoc,
+  query,
   where,
-  limit,
-  increment
+  orderBy,
+  onSnapshot,
+  serverTimestamp,
+  getDocs
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
-// --- Existing exports ---
-export const REACTIONS = ["😁", "😂", "😅", "😍", "😥", "😒", "😔", "😭"];
+// -----------------------------
+// Users
+// -----------------------------
 
-export async function addMessage(userId, text) {
-  await addDoc(collection(db, "messages"), {
-    userId,
-    text,
-    createdAt: ts(),
-    reactions: {}
+export function listenUsers(callback) {
+  return onSnapshot(collection(db, "users"), (snap) => {
+    callback(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
   });
 }
 
-export function listenMessages(callback) {
-  const q = query(
-    collection(db, "messages"),
-    orderBy("createdAt", "asc"),
-    limit(50)
-  );
-  return onSnapshot(q, callback);
-}
-
-export async function addReaction(messageId, emoji) {
-  const msgRef = doc(db, "messages", messageId);
-  await updateDoc(msgRef, {
-    [`reactions.${emoji}`]: increment(1)
-  });
-}
-
-export async function getMessage(messageId) {
-  const ref = doc(db, "messages", messageId);
-  const snap = await getDoc(ref);
-  if (snap.exists()) {
-    return { id: snap.id, ...snap.data() };
-  } else {
-    throw new Error("Message not found");
-  }
-}
-
-export async function queryMessages(field, op, value) {
-  const q = query(
-    collection(db, "messages"),
-    where(field, op, value)
-  );
-  const snap = await getDocs(q);
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
-}
-
-// --- NEW: Functions required by ui.js ---
-
-export function listUsersRealtime(callback) {
-  const q = query(collection(db, "users"), orderBy("displayName", "asc"));
-  return onSnapshot(q, snap => {
-    const users = snap.docs.map(d => ({ uid: d.id, ...d.data() }));
-    callback(users);
-  });
-}
+// -----------------------------
+// Conversations
+// -----------------------------
 
 export async function getOrCreateConversation(peerUid) {
-  const me = auth.currentUser?.uid;
-  if (!me) throw new Error("Not logged in");
+  const me = auth.currentUser.uid;
 
+  // check existing conversation
   const convQuery = query(
     collection(db, "conversations"),
-    where("members", "in", [[me, peerUid], [peerUid, me]]),
-    limit(1)
+    where("participants", "in", [
+      [me, peerUid],
+      [peerUid, me]
+    ])
   );
-  const snap = await getDocs(convQuery);
-  if (!snap.empty) return snap.docs[0].id;
 
+  const snap = await getDocs(convQuery);
+  if (!snap.empty) {
+    return snap.docs[0].id;
+  }
+
+  // if not exist → create new
   const docRef = await addDoc(collection(db, "conversations"), {
-    members: [me, peerUid],
+    participants: [me, peerUid],
     createdAt: serverTimestamp()
   });
+
   return docRef.id;
 }
 
-export function streamMessages(convId, callback) {
-  const msgsRef = collection(db, "conversations", convId, "messages");
-  const q = query(msgsRef, orderBy("createdAt", "asc"));
-  return onSnapshot(q, snap => {
-    const msgs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    callback(msgs);
+export function listenConversations(callback) {
+  const me = auth.currentUser.uid;
+  const q = query(
+    collection(db, "conversations"),
+    where("participants", "array-contains", me),
+    orderBy("createdAt", "desc")
+  );
+  return onSnapshot(q, (snap) => {
+    callback(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
   });
 }
 
-export async function sendMessage(convId, text, replyTo = null) {
-  const me = auth.currentUser?.uid;
-  if (!me) throw new Error("Not logged in");
+// -----------------------------
+// Messages
+// -----------------------------
 
+export async function sendMessage(convId, text, replyTo = null) {
+  const me = auth.currentUser.uid;
   const msgData = {
     senderUid: me,
     text,
     createdAt: serverTimestamp(),
-    reactions: {},
+    reactions: {}, // ✅ reactions field kept
+    deliveredTo: { [me]: true }, // ✅ added for rules
     replyTo: replyTo
       ? { id: replyTo.id, text: replyTo.text || "" }
       : null
   };
-
   await addDoc(collection(db, "conversations", convId, "messages"), msgData);
 }
 
-export async function toggleReaction(convId, msgId, emoji, userId) {
+export function listenMessages(convId, callback) {
+  const q = query(
+    collection(db, "conversations", convId, "messages"),
+    orderBy("createdAt", "asc")
+  );
+  return onSnapshot(q, (snap) => {
+    callback(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+  });
+}
+
+export async function reactMessage(convId, msgId, emoji) {
+  const me = auth.currentUser.uid;
   const msgRef = doc(db, "conversations", convId, "messages", msgId);
   const snap = await getDoc(msgRef);
-  if (!snap.exists()) return;
 
-  const data = snap.data();
-  let reactions = data.reactions || {};
-  let list = reactions[emoji] || [];
+  if (snap.exists()) {
+    const data = snap.data();
+    const reactions = data.reactions || {};
 
-  if (list.includes(userId)) {
-    list = list.filter(uid => uid !== userId);
-  } else {
-    list.push(userId);
+    // toggle system
+    if (!reactions[emoji]) reactions[emoji] = [];
+    if (!reactions[emoji].includes(me)) {
+      reactions[emoji].push(me);
+    } else {
+      reactions[emoji] = reactions[emoji].filter((u) => u !== me);
+      if (reactions[emoji].length === 0) delete reactions[emoji];
+    }
+
+    await updateDoc(msgRef, { reactions });
   }
-  reactions[emoji] = list;
-  await updateDoc(msgRef, { reactions });
 }
 
-export async function markRead(convId) {
-  const me = auth.currentUser?.uid;
-  if (!me) throw new Error("Not logged in");
-  const convRef = doc(db, "conversations", convId);
-  await updateDoc(convRef, { [`read.${me}`]: serverTimestamp() });
+export async function markAsRead(convId, msgId) {
+  const me = auth.currentUser.uid;
+  const msgRef = doc(db, "conversations", convId, "messages", msgId);
+  const snap = await getDoc(msgRef);
+
+  if (snap.exists()) {
+    const data = snap.data();
+    const read = data.read || {};
+    read[me] = serverTimestamp();
+    await updateDoc(msgRef, { read });
+  }
 }
 
-export async function getUser(uid) {
-  const userRef = doc(db, "users", uid);
-  const snap = await getDoc(userRef);
-  return snap.exists() ? { uid: snap.id, ...snap.data() } : null;
+export async function deleteMessage(convId, msgId) {
+  const msgRef = doc(db, "conversations", convId, "messages", msgId);
+  await deleteDoc(msgRef);
 }
