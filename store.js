@@ -5,7 +5,6 @@ import {
   doc,
   addDoc,
   getDoc,
-  setDoc,
   updateDoc,
   deleteDoc,
   query,
@@ -17,13 +16,30 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
 // -----------------------------
+// Constants
+// -----------------------------
+export const REACTIONS = ["👍", "❤️", "😂", "😮", "😢", "👏"];
+
+// -----------------------------
 // Users
 // -----------------------------
 
+// Listen all users
 export function listenUsers(callback) {
   return onSnapshot(collection(db, "users"), (snap) => {
     callback(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
   });
+}
+
+// Get single user
+export async function getUser(uid) {
+  const ref = doc(db, "users", uid);
+  const snap = await getDoc(ref);
+  if (snap.exists()) {
+    return { id: snap.id, ...snap.data() };
+  } else {
+    return null;
+  }
 }
 
 // -----------------------------
@@ -78,8 +94,8 @@ export async function sendMessage(convId, text, replyTo = null) {
     senderUid: me,
     text,
     createdAt: serverTimestamp(),
-    reactions: {}, // ✅ reactions field kept
-    deliveredTo: { [me]: true }, // ✅ added for rules
+    reactions: {}, // keep reaction structure
+    deliveredTo: { [me]: true }, // ✅ rules compatibility
     replyTo: replyTo
       ? { id: replyTo.id, text: replyTo.text || "" }
       : null
