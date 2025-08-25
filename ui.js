@@ -2,7 +2,7 @@
 import { auth } from "./firebase.js";
 import {
   listUsersRealtime, getOrCreateConversation, streamMessages,
-  sendMessage, toggleReaction, markRead, REACTIONS, getUser
+  sendMessage, toggleReaction, markRead, getUser
 } from "./store.js";
 
 const $ = (q) => document.querySelector(q);
